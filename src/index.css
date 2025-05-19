@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* src/index.css ose src/App.css */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE dhe Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Poppins:wght@600;700&display=swap');
+
+body {
+  font-family: 'Nunito', sans-serif;
+}
