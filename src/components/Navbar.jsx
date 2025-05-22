@@ -1,21 +1,35 @@
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
-export default function Navbar() {
+const Navbar = () => {
   return (
-    <nav className="bg-zinc-100 shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-50">
-       <h1 className="text-xl font-bold text-green-600">K-Gigs</h1>
-       <div className="space-x-4">
-        <Link to="/" className="text-gray-700 hover:text-green-600">Home</Link>
-        <Link to="/about" className="text-gray-700 hover:text-green-600">About Us</Link>
-        <Link to="/contact" className="text-gray-700 hover:text-green-600">Contact Us</Link>
-        <Link to="/gigs" className="text-gray-700 hover:text-green-600">Gigs</Link>
+    <nav className="bg-[#6b8f71] text-white px-6 py-4 flex items-center justify-between shadow-md fixed top-0 w-full z-50">
+      <div className="flex items-center space-x-2">
+        {/*<img src="/img/logo.png" alt="K-Gigs Logo" className="w-8 h-8" />*/}
+        <span className="text-xl font-bold">K-Gigs</span>
+      </div>
+
+      <div className="hidden md:flex space-x-6 items-center">
+        <Link to="/" className="hover:text-[#d3e4cd] transition">Home</Link>
+        <Link to="/about" className="hover:text-[#d3e4cd] transition">About Us</Link>
+        <Link to="/contact" className="hover:text-[#d3e4cd] transition">Contact Us</Link>
+        <Link to="/gigs" className="hover:text-[#d3e4cd] transition">Gigs</Link>
+      </div>
+
+      <div className="flex items-center space-x-4">
+        <Link to="/login" className="text-white hover:text-[#d3e4cd] transition">Log In</Link>
+        <Link to="/signup" className="text-white hover:text-[#d3e4cd] transition">Sign Up</Link>
         <Link
-          to="/signup"
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition font-medium"
+          to="/post-gig"
+          className="bg-[#5e7f63] hover:bg-[#a5c4aa] text-white font-semibold px-4 py-2 rounded transition duration-200"
         >
-          Sign Up
+          Post a Gig
         </Link>
       </div>
     </nav>
   );
-}
+};
+
+export default Navbar;
+
+
