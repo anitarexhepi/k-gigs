@@ -1,19 +1,69 @@
-import React from 'react';
-import { Mail, Lock, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Mail, Lock } from "lucide-react";
+import { motion } from "framer-motion";
 
 const Login = () => {
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setError(data.message || "Kyçja dështoi");
+        return;
+      }
+
+      // 🔑 Save session securely
+      sessionStorage.setItem("token", data.token);
+      sessionStorage.setItem("user", JSON.stringify(data.user));
+      sessionStorage.setItem("role", data.user.role);
+      sessionStorage.setItem("userId", data.user.id);
+
+      // 🔹 Redirect bazuar në rol
+      switch (data.user.role) {
+        case "freelancer":
+          navigate("/freelancer-dashboard");
+          break;
+        case "punedhenes":
+          navigate("/punedhenes-dashboard");
+          break;
+        case "admin":
+          navigate("/admin-dashboard");
+          break;
+        default:
+          navigate("/");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Diçka shkoi gabim gjatë kyçjes.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-5xl bg-white shadow-lg rounded-2xl overflow-hidden grid md:grid-cols-2">
         
-       
         <div className="p-10 bg-[#f9f9f9]">
-        <h2 className="text-4xl font-bold mb-8" style={{ color: 'rgb(100, 146, 104)' }}>
+          <h2 className="text-4xl font-bold mb-8" style={{ color: 'rgb(100, 146, 104)' }}>
             Kyçje në K-gigs
           </h2>
 
-          <form className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-semibold mb-2">Emaili</label>
               <motion.div
@@ -23,8 +73,11 @@ const Login = () => {
                 <Mail className="w-4 h-4 text-gray-400 mr-2" />
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Shkruaj emailin tënd"
                   className="w-full bg-transparent outline-none text-sm"
+                  required
                 />
               </motion.div>
             </div>
@@ -38,11 +91,16 @@ const Login = () => {
                 <Lock className="w-4 h-4 text-gray-400 mr-2" />
                 <input
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Shkruaj fjalëkalimin"
                   className="w-full bg-transparent outline-none text-sm"
+                  required
                 />
               </motion.div>
             </div>
+
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
 
             <motion.button
               type="submit"
@@ -59,38 +117,35 @@ const Login = () => {
 
           <p className="mt-6 text-sm text-gray-700 text-center">
             Nuk ke llogari?{' '}
-            <a href="#" className="text-[#6fd09e] underline">Regjistrohu si klient</a> ose{' '}
-            <a href="#" className="text-[#6fd09e] underline">Regjistrohu si punëkërkues</a>
+            <a href="#" className="text-[#6fd09e] underline">Regjistrohu si punëdhënes</a> ose{' '}
+            <a href="#" className="text-[#6fd09e] underline">Regjistrohu si freelancer</a>
           </p>
         </div>
 
-       
         <div
           className="hidden md:flex items-center justify-center"
           style={{
             background: 'linear-gradient(to right,rgb(122, 169, 136),rgb(86, 145, 106))',
           }}
         >
-<motion.div
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="text-center px-8"
           >
-           
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-snug">
-             Filloni rrugëtimin tuaj ne K-gigs!
+              Filloni rrugëtimin tuaj ne K-gigs!
             </h2>
             <p className="mt-4 text-white text-sm">
-             Lidhuni me punëdhënësit apo ofruesit e shërbimeve që ju përshtaten.
+              Lidhuni me punëdhënësit apo ofruesit e shërbimeve që ju përshtaten.
             </p>
           </motion.div>
-
-
-    </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default Login;
+
