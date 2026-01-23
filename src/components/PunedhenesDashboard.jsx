@@ -30,7 +30,7 @@ const PunedhenesDashboard = () => {
     if (token && role === "punedhenes") fetchGigs();
   }, [token, role]);
 
-  // 🔒 Route protection
+ 
   if (!token) return <Navigate to="/login" />;
   if (role !== "punedhenes") return <Navigate to="/" />;
 

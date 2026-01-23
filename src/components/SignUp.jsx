@@ -35,7 +35,7 @@ const SignUp = () => {
     const last_name = nameParts.slice(1).join(" ") || "";
 
     try {
-      // STEP 1: Signup
+      
       const res = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -57,7 +57,7 @@ const SignUp = () => {
         return;
       }
 
-      // STEP 2: Auto-login
+      
       const loginRes = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -74,12 +74,12 @@ const SignUp = () => {
         return;
       }
 
-      // STEP 3: Save session securely
+      
       sessionStorage.setItem("token", loginData.token);
       sessionStorage.setItem("user", JSON.stringify(loginData.user));
       sessionStorage.setItem("role", loginData.user.role);
 
-      // STEP 4: Redirect based on role
+      
       navigate(
         loginData.user.role === "freelancer"
           ? "/freelancer-dashboard"

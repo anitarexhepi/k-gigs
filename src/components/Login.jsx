@@ -28,13 +28,13 @@ const Login = () => {
         return;
       }
 
-      // 🔑 Save session securely
+      
       sessionStorage.setItem("token", data.token);
       sessionStorage.setItem("user", JSON.stringify(data.user));
       sessionStorage.setItem("role", data.user.role);
       sessionStorage.setItem("userId", data.user.id);
 
-      // 🔹 Redirect bazuar në rol
+    
       switch (data.user.role) {
         case "freelancer":
           navigate("/freelancer-dashboard");

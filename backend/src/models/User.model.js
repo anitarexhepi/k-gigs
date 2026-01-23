@@ -12,8 +12,8 @@ class User {
       last_name,
       email,
       password,
-      phone,  // ✅ added
-      city,   // ✅ added
+      phone,  
+      city,   
       role
     ]);
     return result;
