@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import "./adminDashboard.css";
 
 export default function AdminDashboard() {
   const [overview, setOverview] = useState(null);
   const [users, setUsers] = useState([]);
   const [err, setErr] = useState("");
+  const [q, setQ] = useState("");
 
   const token = localStorage.getItem("token");
 
@@ -34,20 +36,23 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line
+   
   }, []);
 
   const toggleActive = async (id, current) => {
     try {
       setErr("");
-      const res = await fetch(`http://localhost:5000/api/admin/users/${id}/active`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ active: !current }),
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/admin/users/${id}/active`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ active: !current }),
+        }
+      );
 
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || "Failed to update user");
@@ -60,83 +65,136 @@ export default function AdminDashboard() {
     }
   };
 
+ 
+  const stats = useMemo(() => {
+    const total = users.length;
+    const active = users.filter((u) => !!u.active).length;
+    const inactive = total - active;
+
+    const freelancers = users.filter((u) => u.role === "freelancer").length;
+    const punedhenes = users.filter((u) => u.role === "punedhenes").length;
+    const admins = users.filter((u) => u.role === "admin").length;
+
+    const activeRate = total ? Math.round((active / total) * 100) : 0;
+
+    return { total, active, inactive, freelancers, punedhenes, admins, activeRate };
+  }, [users]);
+
+  const filteredUsers = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    if (!s) return users;
+
+    return users.filter((u) => {
+      const name = `${u.first_name || ""} ${u.last_name || ""}`.toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      const role = (u.role || "").toLowerCase();
+      return name.includes(s) || email.includes(s) || role.includes(s);
+    });
+  }, [users, q]);
+
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Admin Dashboard</h1>
+    <div className="adm">
+      <h1 className="adm__title">Admin Dashboard</h1>
 
-      {err && <p style={{ color: "red" }}>{err}</p>}
+      {err && <p style={{ color: "red", marginBottom: 12 }}>{err}</p>}
 
-      {!overview ? (
+     
+      <div className="adm__stats">
+        <div className="stat">
+          <div className="stat__label">Users</div>
+          <div className="stat__value">{overview?.users ?? stats.total}</div>
+        </div>
+
+        <div className="stat">
+          <div className="stat__label">Active Users</div>
+          <div className="stat__value">{stats.active}</div>
+        </div>
+
+        <div className="stat">
+          <div className="stat__label">Inactive Users</div>
+          <div className="stat__value">{stats.inactive}</div>
+        </div>
+
+        <div className="stat">
+          <div className="stat__label">Freelancers</div>
+          <div className="stat__value">{stats.freelancers}</div>
+        </div>
+
+        <div className="stat">
+          <div className="stat__label">Punëdhënës</div>
+          <div className="stat__value">{stats.punedhenes}</div>
+        </div>
+      </div>
+
+    
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+        <div style={{ fontSize: 13, color: "#667085" }}>
+          Activation rate: <b style={{ color: "#101828" }}>{stats.activeRate}%</b> • Admins:{" "}
+          <b style={{ color: "#101828" }}>{stats.admins}</b>
+        </div>
+
+        <div style={{ marginLeft: "auto" }}>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search by name / email / role..."
+            className="adm__search"
+          />
+        </div>
+      </div>
+
+      {!overview && users.length === 0 ? (
         <p>Loading...</p>
       ) : (
-        <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-          <div style={{ border: "1px solid #ddd", padding: 16, borderRadius: 10 }}>
-            <h3>Users</h3>
-            <p>{overview.users}</p>
-          </div>
-          <div style={{ border: "1px solid #ddd", padding: 16, borderRadius: 10 }}>
-            <h3>Gigs</h3>
-            <p>{overview.gigs}</p>
-          </div>
-          <div style={{ border: "1px solid #ddd", padding: 16, borderRadius: 10 }}>
-            <h3>Applications</h3>
-            <p>{overview.applications}</p>
-          </div>
+        <div style={{ overflowX: "auto" }}>
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Active</th>
+                <th style={{ textAlign: "right" }}>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filteredUsers.map((u) => (
+                <tr key={u.id}>
+                  <td>{u.id}</td>
+                  <td>
+                    {u.first_name} {u.last_name}
+                  </td>
+                  <td>{u.email}</td>
+                  <td>{u.role}</td>
+                  <td>
+                    <span className={`badge ${u.active ? "badge--yes" : "badge--no"}`}>
+                      {u.active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    <button
+                      className={`btn ${u.active ? "" : "btn--primary"}`}
+                      onClick={() => toggleActive(u.id, !!u.active)}
+                    >
+                      {u.active ? "Deactivate" : "Activate"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+
+              {filteredUsers.length === 0 && (
+                <tr>
+                  <td colSpan="6" style={{ padding: 12 }}>
+                    No users found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
-
-      <h2>Users</h2>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: "left", borderBottom: "1px solid #ddd", padding: 8 }}>
-                ID
-              </th>
-              <th style={{ textAlign: "left", borderBottom: "1px solid #ddd", padding: 8 }}>
-                Name
-              </th>
-              <th style={{ textAlign: "left", borderBottom: "1px solid #ddd", padding: 8 }}>
-                Email
-              </th>
-              <th style={{ textAlign: "left", borderBottom: "1px solid #ddd", padding: 8 }}>
-                Role
-              </th>
-              <th style={{ textAlign: "left", borderBottom: "1px solid #ddd", padding: 8 }}>
-                Active
-              </th>
-              <th style={{ borderBottom: "1px solid #ddd", padding: 8 }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>{u.id}</td>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>
-                  {u.first_name} {u.last_name}
-                </td>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>{u.email}</td>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>{u.role}</td>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>
-                  {u.active ? "Yes" : "No"}
-                </td>
-                <td style={{ borderBottom: "1px solid #eee", padding: 8 }}>
-                  <button onClick={() => toggleActive(u.id, !!u.active)}>
-                    {u.active ? "Deactivate" : "Activate"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {users.length === 0 && (
-              <tr>
-                <td colSpan="6" style={{ padding: 12 }}>
-                  No users
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 }
