@@ -10,6 +10,9 @@ import Login from './components/Login';
 import PostGig from "./components/PostGig";
 import PunedhenesDashboard from "./components/PunedhenesDashboard";
 import ProtectedPunedhenesRoute from "./components/ProtectedPunedhenesRoute";
+import AdminDashboard from "./components/AdminDashboard";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
+
 
 function App() {
   return (
@@ -22,8 +25,8 @@ function App() {
        
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
-
-          {/* PUNEDHENES ONLY */}
+          <Route path="/admin-dashboard" element={<ProtectedAdminRoute>  <AdminDashboard /></ProtectedAdminRoute>}/>
+    
           <Route
             path="/post-gig"
             element={
