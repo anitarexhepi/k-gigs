@@ -7,5 +7,8 @@ router.post('/signup', AuthController.signup);
 
 
 router.post('/login', AuthController.login);
+router.get("/test", (req, res) => {
+  res.json({ ok: true, msg: "auth routes working" });
+});
 
 module.exports = router;

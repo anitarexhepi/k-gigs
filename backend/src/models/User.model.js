@@ -1,29 +1,30 @@
-const pool = require('../config/db');
+const pool = require("../config/db");
 
 class User {
- 
-
   static async create({ first_name, last_name, email, password, phone, city, role }) {
     const sql = `
       INSERT INTO users 
       (first_name, last_name, email, password, phone, city, role)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    const [result] = await pool.execute(sql, [
-      first_name,
-      last_name,
-      email,
+
+    const params = [
+      first_name ?? null,
+      last_name ?? null,
+      (email || "").trim().toLowerCase(),
       password,
-      phone,
-      city,
+      phone ?? null,
+      city ?? null,
       role
-    ]);
+    ];
+
+    const [result] = await pool.execute(sql, params);
     return result;
   }
 
   static async findByEmail(email) {
     const sql = `SELECT * FROM users WHERE email = ?`;
-    const [rows] = await pool.execute(sql, [email]);
+    const [rows] = await pool.execute(sql, [(email || "").trim().toLowerCase()]);
     return rows[0];
   }
 
@@ -42,11 +43,15 @@ class User {
     const values = [];
 
     for (let key in data) {
+      let val = data[key];
+      if (key === "email") val = (val || "").trim().toLowerCase();
+      if (val === undefined) val = null;
+
       fields.push(`${key} = ?`);
-      values.push(data[key]);
+      values.push(val);
     }
 
-    const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = ?`;
+    const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
     values.push(id);
 
     const [result] = await pool.execute(sql, values);
@@ -59,13 +64,11 @@ class User {
     return result;
   }
 
- 
   static async countAll() {
     const sql = `SELECT COUNT(*) AS total FROM users`;
     const [rows] = await pool.execute(sql);
     return rows[0].total;
   }
-
 
   static async findAll() {
     const sql = `
@@ -84,7 +87,6 @@ class User {
     const [rows] = await pool.execute(sql);
     return rows;
   }
-
 
   static async setActive(id, isActive) {
     const sql = `UPDATE users SET is_active = ? WHERE id = ?`;
