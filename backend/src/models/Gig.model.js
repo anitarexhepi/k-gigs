@@ -26,7 +26,16 @@ class Gig {
     return rows[0];
   }
 
-  static async findAll({ q, category, location, status, limit = 10, page = 1 }) {
+  static async findAll({
+    q,
+    category,
+    location,
+    status,
+    minBudget,
+    maxBudget,
+    limit = 10,
+    page = 1,
+  }) {
     const where = [];
     const values = [];
 
@@ -34,17 +43,33 @@ class Gig {
       where.push(`(title LIKE ? OR description LIKE ?)`);
       values.push(`%${q}%`, `%${q}%`);
     }
+
     if (category) {
       where.push(`category = ?`);
       values.push(category);
     }
+
     if (location) {
       where.push(`location = ?`);
       values.push(location);
     }
+
     if (status) {
       where.push(`status = ?`);
       values.push(status);
+    }
+
+    const minB = minBudget !== undefined && minBudget !== "" ? Number(minBudget) : null;
+    const maxB = maxBudget !== undefined && maxBudget !== "" ? Number(maxBudget) : null;
+
+    if (minB !== null && !Number.isNaN(minB)) {
+      where.push(`budget >= ?`);
+      values.push(minB);
+    }
+
+    if (maxB !== null && !Number.isNaN(maxB)) {
+      where.push(`budget <= ?`);
+      values.push(maxB);
     }
 
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
@@ -70,6 +95,20 @@ class Gig {
       page: safePage,
       limit: safeLimit,
       total: countRows[0]?.total || 0,
+    };
+  }
+
+  static async getMeta() {
+    const [catRows] = await pool.execute(
+      `SELECT DISTINCT category FROM gigs WHERE category IS NOT NULL AND category <> '' ORDER BY category ASC`
+    );
+    const [locRows] = await pool.execute(
+      `SELECT DISTINCT location FROM gigs WHERE location IS NOT NULL AND location <> '' ORDER BY location ASC`
+    );
+
+    return {
+      categories: catRows.map((r) => r.category),
+      locations: locRows.map((r) => r.location),
     };
   }
 

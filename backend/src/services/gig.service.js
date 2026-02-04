@@ -15,6 +15,10 @@ class GigService {
     return gig;
   }
 
+  static async meta() {
+    return Gig.getMeta();
+  }
+
   static async createGig(user, payload) {
     const role = (user?.role || "").trim().toLowerCase();
 
@@ -26,7 +30,7 @@ class GigService {
 
     const title = (payload.title || "").trim();
     if (title.length < 3) {
-      const err = new Error("Title është i detyrueshëm (min 3 karaktere)");
+      const err = new Error("Titulli është i detyrueshëm");
       err.statusCode = 400;
       throw err;
     }
@@ -49,7 +53,7 @@ class GigService {
 
     const role = (user?.role || "").trim().toLowerCase();
     if (gig.user_id !== user.id && role !== "admin") {
-      const err = new Error("Forbidden: not owner");
+      const err = new Error("Forbidden");
       err.statusCode = 403;
       throw err;
     }
@@ -61,7 +65,7 @@ class GigService {
     }
 
     if (Object.keys(data).length === 0) {
-      const err = new Error("No fields to update");
+      const err = new Error("Nothing to update");
       err.statusCode = 400;
       throw err;
     }
@@ -75,7 +79,7 @@ class GigService {
 
     const role = (user?.role || "").trim().toLowerCase();
     if (gig.user_id !== user.id && role !== "admin") {
-      const err = new Error("Forbidden: not owner");
+      const err = new Error("Forbidden");
       err.statusCode = 403;
       throw err;
     }

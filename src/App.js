@@ -12,6 +12,8 @@ import PunedhenesDashboard from "./components/PunedhenesDashboard";
 import ProtectedPunedhenesRoute from "./components/ProtectedPunedhenesRoute";
 import AdminDashboard from "./components/AdminDashboard";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
+import GigsPage from "./components/GigsPage";
+import GigDetails from "./components/GigDetails";
 
 
 function App() {
@@ -19,14 +21,28 @@ function App() {
     <Router>
       <Layout>
         <Routes>
+          {/* Public pages */}
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
-       
+          <Route path="/gigs" element={<GigsPage />} />
+          <Route path="/gigs/:id" element={<GigDetails />} />
+
+          {/* Auth */}
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/admin-dashboard" element={<ProtectedAdminRoute>  <AdminDashboard /></ProtectedAdminRoute>}/>
-    
+
+          {/* Admin */}
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          {/* Punedhenes */}
           <Route
             path="/post-gig"
             element={
@@ -49,6 +65,7 @@ function App() {
     </Router>
   );
 }
+
 
 export default App;
 

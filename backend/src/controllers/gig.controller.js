@@ -18,6 +18,15 @@ exports.getGig = async (req, res, next) => {
   }
 };
 
+exports.getMeta = async (req, res, next) => {
+  try {
+    const data = await GigService.meta();
+    res.json({ success: true, ...data });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.createGig = async (req, res, next) => {
   try {
     const created = await GigService.createGig(req.user, req.body);

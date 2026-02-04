@@ -8,6 +8,8 @@ router.get("/test", (req, res) => {
   res.json({ ok: true, msg: "gig routes working" });
 });
 
+router.get("/meta", gigController.getMeta);
+
 router.get("/", gigController.listGigs);
 router.get("/:id", gigController.getGig);
 
