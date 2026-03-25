@@ -34,5 +34,26 @@ export async function fetchGigsMeta() {
   if (!res.ok || data.success === false) {
     throw new Error(data.message || "Dështoi ngarkimi i kategorive/qyteteve");
   }
-  return data; 
+  return data;
+}
+
+export async function createGig(payload) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_BASE}/api/gigs`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || data.success === false) {
+    throw new Error(data.message || "Dështoi krijimi i gig-ut");
+  }
+
+  return data;
 }
