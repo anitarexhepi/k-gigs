@@ -14,15 +14,15 @@ class AuthService {
     phone = (phone || "").trim();
     city = (city || "").trim();
 
-    if (!first_name) throw new Error("first_name është i detyrueshëm");
-    if (!last_name) throw new Error("last_name është i detyrueshëm");
-    if (!phone) throw new Error("phone është i detyrueshëm");
-    if (!city) throw new Error("city është i detyrueshëm");
-    if (!email || !password) throw new Error("Email dhe password janë të detyrueshme");
+    if (!first_name) throw new Error("first_name eshte i detyrueshem");
+    if (!last_name) throw new Error("last_name eshte i detyrueshem");
+    if (!phone) throw new Error("phone eshte i detyrueshem");
+    if (!city) throw new Error("city eshte i detyrueshem");
+    if (!email || !password) throw new Error("Email dhe password jane te detyrueshme");
 
     if (!role) role = "freelancer";
     if (!["freelancer", "punedhenes"].includes(role)) {
-      throw new Error("Role i pavlefshëm");
+      throw new Error("Role i pavlefshem");
     }
 
     const existingUser = await User.findByEmail(email);
@@ -50,56 +50,70 @@ class AuthService {
     };
   }
 
-  static async login({ email, password }) {
-    email = (email || "").trim().toLowerCase();
-    password = (password || "").trim();
+static async login({ email, password }) {
+  email = (email || "").trim().toLowerCase();
+  password = (password || "").trim();
 
-    if (!email || !password) {
-      throw new Error("Email dhe password janë të detyrueshme");
-    }
+  if (!email || !password) {
+    throw new Error("Email dhe password jane te detyrueshme");
+  }
 
-    if (email === "admin@kgigs.com" && password === "admin1234") {
-      const token = jwt.sign(
-        { id: 0, role: "admin" },
-        JWT_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      return {
-        token,
-        user: {
-          id: 0,
-          first_name: "Admin",
-          role: "admin",
-        },
-      };
-    }
-
-    const user = await User.findByEmail(email);
-    if (!user) throw new Error("User not found");
-
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) throw new Error("Fjalëkalimi gabim");
-
-    const role = (user.role || "").trim().toLowerCase();
-    if (!["freelancer", "punedhenes"].includes(role)) {
-      throw new Error("Role i pavlefshëm");
-    }
-
-    const token = jwt.sign(
-      { id: user.id, role },
+  if (email === "admin@kgigs.com" && password === "admin1234") {
+    const accessToken = jwt.sign(
+      { id: 0, role: "admin" },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
 
+    const refreshToken = jwt.sign(
+      { id: 0, role: "admin" },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
     return {
-      token,
+      token: accessToken,
+      refreshToken,
       user: {
-        id: user.id,
-        first_name: user.first_name,
-        role,
+        id: 0,
+        first_name: "Admin",
+        role: "admin",
       },
     };
+  }
+
+  const user = await User.findByEmail(email);
+    if (!user) throw new Error("User not found");
+
+  const valid = await bcrypt.compare(password, user.password);
+    if (!valid) throw new Error("Fjalekalimi gabim");
+
+  const role = (user.role || "").trim().toLowerCase();
+    if (!["freelancer", "punedhenes"].includes(role)) {
+    throw new Error("Role i pavlefshem");
+  }
+
+  const accessToken = jwt.sign(
+    { id: user.id, role },
+    JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+
+const refreshToken = jwt.sign(
+  { id: user.id, role },
+  JWT_SECRET,
+  { expiresIn: "7d" }
+);
+
+return {
+  token: accessToken,
+  refreshToken,
+  user: {
+    id: user.id,
+    first_name: user.first_name,
+    role,
+  },
+};
   }
 }
 

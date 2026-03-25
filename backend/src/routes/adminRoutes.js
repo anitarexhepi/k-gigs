@@ -26,5 +26,26 @@ router.patch(
   roleMiddleware(["admin"]),
   AdminController.setUserActive
 );
+router.post(
+  "/users",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  AdminController.createUser
+);
+
+router.put(
+  "/users/:id",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  AdminController.updateUser
+);
+
+router.delete(
+  "/users/:id",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  AdminController.deleteUser
+);
+
 
 module.exports = router;

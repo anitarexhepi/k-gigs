@@ -19,6 +19,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 
+
 app.use("/api/gigs", gigRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/cv", cvRoutes);

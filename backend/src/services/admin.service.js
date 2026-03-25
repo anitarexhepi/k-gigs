@@ -26,6 +26,19 @@ class AdminService {
   static async setUserActive(id, active) {
     return await User.setActive(id, active);
   }
+    static async createUser(data) {
+   
+    return await User.create(data);
+  }
+
+  static async updateUser(id, data) {
+    return await User.update(id, data);
+  }
+
+  static async deleteUser(id) {
+    return await User.delete(id);
+  }
+
 }
 
 module.exports = AdminService;
