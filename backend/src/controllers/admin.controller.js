@@ -1,5 +1,4 @@
 const AdminService = require("../services/admin.service");
-const bcrypt = require("bcryptjs");
 
 class AdminController {
   static async getOverview(req, res) {
@@ -7,16 +6,22 @@ class AdminController {
       const data = await AdminService.getOverview();
       return res.json({ success: true, data });
     } catch (err) {
-      return res.status(500).json({ success: false, message: err.message });
+      return res.status(500).json({
+        success: false,
+        message: err.message || "Gabim te overview",
+      });
     }
   }
 
   static async getUsers(req, res) {
     try {
-      const users = await AdminService.getUsers();
-      return res.json({ success: true, data: users });
+      const data = await AdminService.getUsers();
+      return res.json({ success: true, data });
     } catch (err) {
-      return res.status(500).json({ success: false, message: err.message });
+      return res.status(500).json({
+        success: false,
+        message: err.message || "Gabim te users",
+      });
     }
   }
 
@@ -25,83 +30,80 @@ class AdminController {
       const id = Number(req.params.id);
       const { active } = req.body;
 
-      if (!Number.isFinite(id)) {
-        return res.status(400).json({ success: false, message: "Invalid user id" });
-      }
-
-      if (typeof active !== "boolean") {
-        return res.status(400).json({ success: false, message: "active must be boolean" });
-      }
-
-      await AdminService.setUserActive(id, active);
-      return res.json({ success: true, message: "Updated" });
-    } catch (err) {
-      return res.status(500).json({ success: false, message: err.message });
-    }
-  }
-
-  // ✅ CREATE
-  static async createUser(req, res) {
-    try {
-      const { first_name, last_name, email, password, phone, city, role } = req.body;
-
-      if (!email || !password) {
+      if (!id) {
         return res.status(400).json({
           success: false,
-          message: "Email dhe password janë të detyrueshme",
+          message: "ID e pavlefshme",
         });
       }
 
-      const hashed = await bcrypt.hash(password, 10);
+      await AdminService.setUserActive(id, active);
 
-      const result = await AdminService.createUser({
-        first_name,
-        last_name,
-        email,
-        password: hashed,
-        phone,
-        city,
-        role: role || "freelancer",
+      return res.json({
+        success: true,
+        message: `User u ${active ? "aktivizua" : "deaktivizua"} me sukses`,
       });
-
-      return res.status(201).json({ success: true, data: result });
     } catch (err) {
-      return res.status(500).json({ success: false, message: err.message });
+      return res.status(500).json({
+        success: false,
+        message: err.message || "Gabim te ndryshimi i statusit",
+      });
     }
   }
 
-  // ✅ UPDATE
+  static async createUser(req, res) {
+    try {
+      const data = await AdminService.createUser(req.body);
+      return res.status(201).json({ success: true, data });
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        message: err.message || "Gabim te krijimi i user",
+      });
+    }
+  }
+
   static async updateUser(req, res) {
     try {
       const id = Number(req.params.id);
-      if (!Number.isFinite(id)) {
-        return res.status(400).json({ success: false, message: "Invalid user id" });
+      const data = req.body;
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: "ID e pavlefshme",
+        });
       }
 
-      const { first_name, last_name, email, phone, city, role, is_active } = req.body;
-
-      const data = { first_name, last_name, email, phone, city, role };
-      if (is_active !== undefined) data.is_active = is_active ? 1 : 0;
-
       const result = await AdminService.updateUser(id, data);
-      return res.json({ success: true, data: result });
+
+      return res.json({
+        success: true,
+        data: result,
+        message: "User u përditësua me sukses",
+      });
     } catch (err) {
-      return res.status(500).json({ success: false, message: err.message });
+      return res.status(500).json({
+        success: false,
+        message: err.message || "Gabim te update user",
+      });
     }
   }
 
-  // ✅ DELETE
   static async deleteUser(req, res) {
     try {
       const id = Number(req.params.id);
-      if (!Number.isFinite(id)) {
-        return res.status(400).json({ success: false, message: "Invalid user id" });
-      }
+      await AdminService.deleteUser(id);
 
-      const result = await AdminService.deleteUser(id);
-      return res.json({ success: true, data: result });
+      return res.json({
+        success: true,
+        message: "User u fshi me sukses",
+      });
     } catch (err) {
-      return res.status(500).json({ success: false, message: err.message });
+      return res.status(500).json({
+        success: false,
+        message: err.message || "Gabim te fshirja e user",
+      });
     }
   }
 }

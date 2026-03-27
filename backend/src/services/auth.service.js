@@ -38,6 +38,7 @@ class AuthService {
       phone,
       city,
       role,
+      is_active: 1,
     });
 
     return {
@@ -50,23 +51,61 @@ class AuthService {
     };
   }
 
-static async login({ email, password }) {
-  email = (email || "").trim().toLowerCase();
-  password = (password || "").trim();
+  static async login({ email, password }) {
+    email = (email || "").trim().toLowerCase();
+    password = (password || "").trim();
 
-  if (!email || !password) {
-    throw new Error("Email dhe password jane te detyrueshme");
-  }
+    if (!email || !password) {
+      throw new Error("Email dhe password jane te detyrueshme");
+    }
 
-  if (email === "admin@kgigs.com" && password === "admin1234") {
+    if (email === "admin@kgigs.com" && password === "admin1234") {
+      const accessToken = jwt.sign(
+        { id: 0, role: "admin" },
+        JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      const refreshToken = jwt.sign(
+        { id: 0, role: "admin" },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      return {
+        token: accessToken,
+        refreshToken,
+        user: {
+          id: 0,
+          first_name: "Admin",
+          role: "admin",
+        },
+      };
+    }
+
+    const user = await User.findByEmail(email);
+    if (!user) throw new Error("User not found");
+
+    if (Number(user.is_active) !== 1) {
+      throw new Error("Llogaria juaj eshte deaktivizuar");
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) throw new Error("Fjalekalimi gabim");
+
+    const role = (user.role || "").trim().toLowerCase();
+    if (!["freelancer", "punedhenes"].includes(role)) {
+      throw new Error("Role i pavlefshem");
+    }
+
     const accessToken = jwt.sign(
-      { id: 0, role: "admin" },
+      { id: user.id, role },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
 
     const refreshToken = jwt.sign(
-      { id: 0, role: "admin" },
+      { id: user.id, role },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -75,45 +114,11 @@ static async login({ email, password }) {
       token: accessToken,
       refreshToken,
       user: {
-        id: 0,
-        first_name: "Admin",
-        role: "admin",
+        id: user.id,
+        first_name: user.first_name,
+        role,
       },
     };
-  }
-
-  const user = await User.findByEmail(email);
-    if (!user) throw new Error("User not found");
-
-  const valid = await bcrypt.compare(password, user.password);
-    if (!valid) throw new Error("Fjalekalimi gabim");
-
-  const role = (user.role || "").trim().toLowerCase();
-    if (!["freelancer", "punedhenes"].includes(role)) {
-    throw new Error("Role i pavlefshem");
-  }
-
-  const accessToken = jwt.sign(
-    { id: user.id, role },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-const refreshToken = jwt.sign(
-  { id: user.id, role },
-  JWT_SECRET,
-  { expiresIn: "7d" }
-);
-
-return {
-  token: accessToken,
-  refreshToken,
-  user: {
-    id: user.id,
-    first_name: user.first_name,
-    role,
-  },
-};
   }
 }
 

@@ -1,11 +1,11 @@
 const pool = require("../config/db");
 
 class User {
-  static async create({ first_name, last_name, email, password, phone, city, role }) {
+  static async create({ first_name, last_name, email, password, phone, city, role, is_active = 1 }) {
     const sql = `
       INSERT INTO users 
-      (first_name, last_name, email, password, phone, city, role)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (first_name, last_name, email, password, phone, city, role, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
@@ -15,7 +15,8 @@ class User {
       password,
       phone ?? null,
       city ?? null,
-      role
+      role,
+      is_active ? 1 : 0,
     ];
 
     const [result] = await pool.execute(sql, params);
@@ -80,7 +81,8 @@ class User {
         phone,
         city,
         role,
-        is_active
+        is_active,
+        is_active AS active
       FROM users
       ORDER BY id DESC
     `;
