@@ -9,13 +9,28 @@ class Application {
     return rows[0];
   }
 
+  static async findById(id) {
+    const [rows] = await pool.execute(
+      `SELECT a.*, g.user_id AS gig_owner_id, g.title AS gig_title
+       FROM applications a
+       LEFT JOIN gigs g ON g.id = a.gig_id
+       WHERE a.id = ?
+       LIMIT 1`,
+      [id]
+    );
+    return rows[0];
+  }
+
   static async create({ gig_id, user_id, cover_letter }) {
-   
     const [result] = await pool.execute(
       "INSERT INTO applications (gig_id, user_id, cover_letter, status) VALUES (?, ?, ?, ?)",
       [gig_id, user_id, cover_letter, "pending"]
     );
-    const [rows] = await pool.execute("SELECT * FROM applications WHERE id = ?", [result.insertId]);
+
+    const [rows] = await pool.execute(
+      "SELECT * FROM applications WHERE id = ?",
+      [result.insertId]
+    );
     return rows[0];
   }
 
@@ -43,15 +58,42 @@ class Application {
     return rows;
   }
 
+  static async updateMine(id, cover_letter) {
+    const [result] = await pool.execute(
+      "UPDATE applications SET cover_letter = ? WHERE id = ?",
+      [cover_letter, id]
+    );
+
+    if (result.affectedRows === 0) return null;
+
+    const [rows] = await pool.execute(
+      "SELECT * FROM applications WHERE id = ?",
+      [id]
+    );
+    return rows[0];
+  }
+
   static async updateStatus(id, status) {
     const [result] = await pool.execute(
       "UPDATE applications SET status = ? WHERE id = ?",
       [status, id]
     );
+
     if (result.affectedRows === 0) return null;
 
-    const [rows] = await pool.execute("SELECT * FROM applications WHERE id = ?", [id]);
+    const [rows] = await pool.execute(
+      "SELECT * FROM applications WHERE id = ?",
+      [id]
+    );
     return rows[0];
+  }
+
+  static async deleteMine(id) {
+    const [result] = await pool.execute(
+      "DELETE FROM applications WHERE id = ?",
+      [id]
+    );
+    return result.affectedRows > 0;
   }
 }
 

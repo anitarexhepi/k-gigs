@@ -51,6 +51,60 @@ exports.listByGig = async (req, res, next) => {
   }
 };
 
+exports.updateMine = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const role = (req.user.role || "").trim().toLowerCase();
+    const id = Number(req.params.id);
+    const { cover_letter } = req.body;
+
+    if (role !== "freelancer") {
+      return res.status(403).json({
+        success: false,
+        message: "Vetëm freelancer mund ta përditësojë aplikimin",
+      });
+    }
+
+    const updated = await applicationService.updateMine(
+      id,
+      userId,
+      cover_letter || ""
+    );
+
+    return res.json({
+      success: true,
+      data: updated,
+      message: "Aplikimi u përditësua me sukses",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteMine = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const role = (req.user.role || "").trim().toLowerCase();
+    const id = Number(req.params.id);
+
+    if (role !== "freelancer") {
+      return res.status(403).json({
+        success: false,
+        message: "Vetëm freelancer mund ta fshijë aplikimin",
+      });
+    }
+
+    await applicationService.deleteMine(id, userId);
+
+    return res.json({
+      success: true,
+      message: "Aplikimi u tërhoq me sukses",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.updateStatus = async (req, res, next) => {
   try {
     const id = Number(req.params.id);

@@ -8,13 +8,11 @@ router.get("/test", (req, res) => {
 });
 
 router.post("/", authMiddleware, applicationController.apply);
-
-
 router.get("/me", authMiddleware, applicationController.listMine);
-
-
 router.get("/gig/:gigId", authMiddleware, applicationController.listByGig);
 
+router.patch("/:id", authMiddleware, applicationController.updateMine);
+router.delete("/:id", authMiddleware, applicationController.deleteMine);
 
 router.patch("/:id/status", authMiddleware, applicationController.updateStatus);
 
