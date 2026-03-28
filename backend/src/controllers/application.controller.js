@@ -3,10 +3,20 @@ const applicationService = require("../services/application.service");
 exports.apply = async (req, res, next) => {
   try {
     const userId = req.user.id;
+    const role = (req.user.role || "").trim().toLowerCase();
     const { gig_id, cover_letter } = req.body;
 
+    if (role !== "freelancer") {
+      return res.status(403).json({
+        success: false,
+        message: "Vetëm freelancer mund të aplikojë",
+      });
+    }
+
     if (!gig_id) {
-      return res.status(400).json({ success: false, message: "gig_id is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "gig_id is required" });
     }
 
     const created = await applicationService.apply({
@@ -46,9 +56,10 @@ exports.updateStatus = async (req, res, next) => {
     const id = Number(req.params.id);
     const { status } = req.body;
 
-   
     if (!status) {
-      return res.status(400).json({ success: false, message: "status is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "status is required" });
     }
 
     const updated = await applicationService.updateStatus(id, status);

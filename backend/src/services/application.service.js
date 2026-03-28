@@ -1,7 +1,20 @@
 const Application = require("../models/Application.model");
+const Gig = require("../models/Gig.model");
 
 exports.apply = async ({ gig_id, user_id, cover_letter }) => {
-  
+  const gig = await Gig.findById(gig_id);
+  if (!gig) {
+    const e = new Error("Gig not found");
+    e.statusCode = 404;
+    throw e;
+  }
+
+  if ((gig.status || "").toLowerCase() !== "open") {
+    const e = new Error("Nuk mund të aplikoni në një gig të mbyllur");
+    e.statusCode = 400;
+    throw e;
+  }
+
   const exists = await Application.findByGigAndUser(gig_id, user_id);
   if (exists) {
     const e = new Error("You already applied to this gig");

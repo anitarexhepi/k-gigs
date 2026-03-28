@@ -6,9 +6,15 @@ const Layout = ({ children }) => {
   const [refresh, setRefresh] = useState(false);
 
   useEffect(() => {
-    const syncAuth = () => setRefresh(prev => !prev);
+    const syncAuth = () => setRefresh((prev) => !prev);
+
     window.addEventListener("storage", syncAuth);
-    return () => window.removeEventListener("storage", syncAuth);
+    window.addEventListener("authChanged", syncAuth);
+
+    return () => {
+      window.removeEventListener("storage", syncAuth);
+      window.removeEventListener("authChanged", syncAuth);
+    };
   }, []);
 
   return (
@@ -21,6 +27,3 @@ const Layout = ({ children }) => {
 };
 
 export default Layout;
-
-
-

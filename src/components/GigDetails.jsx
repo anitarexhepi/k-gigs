@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { fetchGigById, fetchGigs } from "../api/gigsApi";
+import { applyToGig } from "../api/freelancerApi";
 
 function getFavKey() {
   return "k-gigs:favorites";
@@ -45,14 +46,20 @@ export default function GigDetails() {
   const { id } = useParams();
   const nav = useNavigate();
 
+  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("role");
+
   const [gig, setGig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
   const [fav, setFav] = useState(false);
-
   const [similar, setSimilar] = useState([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
+
+  const [applyLoading, setApplyLoading] = useState(false);
+  const [applyMessage, setApplyMessage] = useState("");
+  const [applyError, setApplyError] = useState("");
 
   const skills = useMemo(() => {
     if (!gig) return [];
@@ -80,7 +87,6 @@ export default function GigDetails() {
     load();
   }, [id]);
 
-  
   useEffect(() => {
     if (!gig) return;
 
@@ -117,10 +123,33 @@ export default function GigDetails() {
     writeFavs(next);
   };
 
-  const onApply = () => {
-    
-    
-    alert("Aplikimi do të jetë së shpejti (Applications/CV po ndërtohet).");
+  const onApply = async () => {
+    setApplyError("");
+    setApplyMessage("");
+
+    if (!token) {
+      nav("/login");
+      return;
+    }
+
+    if (role !== "freelancer") {
+      setApplyError("Vetëm freelancer mund të aplikojë në një gig.");
+      return;
+    }
+
+    try {
+      setApplyLoading(true);
+      await applyToGig({
+        gig_id: Number(id),
+        cover_letter: "Jam i/e interesuar për këtë gig.",
+      });
+      setApplyMessage("Aplikimi u dërgua me sukses.");
+    } catch (err) {
+      console.error(err);
+      setApplyError(err.message || "Aplikimi dështoi.");
+    } finally {
+      setApplyLoading(false);
+    }
   };
 
   return (
@@ -150,13 +179,9 @@ export default function GigDetails() {
 
         {!loading && gig && (
           <>
-            {}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-              {}
               <div className="lg:col-span-2 bg-white rounded-3xl shadow-md p-7">
-                <h1 className="text-3xl font-extrabold text-green-900">
-                  {gig.title}
-                </h1>
+                <h1 className="text-3xl font-extrabold text-green-900">{gig.title}</h1>
                 <div className="text-gray-600 mt-2">
                   {gig.category || "—"} • {gig.location || "—"}
                 </div>
@@ -192,7 +217,6 @@ export default function GigDetails() {
                 </ul>
               </div>
 
-              {}
               <div className="bg-white rounded-3xl shadow-md p-7 h-fit">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -220,19 +244,28 @@ export default function GigDetails() {
                   </div>
                 </div>
 
+                {applyError && (
+                  <div className="mt-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">
+                    {applyError}
+                  </div>
+                )}
+
+                {applyMessage && (
+                  <div className="mt-4 bg-green-50 border border-green-200 text-green-700 rounded-xl p-3 text-sm">
+                    {applyMessage}
+                  </div>
+                )}
+
                 <div className="mt-6 flex flex-col gap-3">
                   <button
                     onClick={onApply}
-                    className="w-full px-5 py-3 rounded-2xl bg-green-700 text-white hover:bg-green-800 transition font-semibold"
+                    className="w-full px-5 py-3 rounded-2xl bg-green-700 text-white hover:bg-green-800 transition font-semibold disabled:opacity-70"
                     type="button"
-                    disabled={String(gig.status || "").toLowerCase() === "closed"}
-                    title={
-                      String(gig.status || "").toLowerCase() === "closed"
-                        ? "Kjo punë është mbyllur"
-                        : "Apliko"
+                    disabled={
+                      String(gig.status || "").toLowerCase() === "closed" || applyLoading
                     }
                   >
-                    Apliko
+                    {applyLoading ? "Duke aplikuar..." : "Apliko"}
                   </button>
 
                   <button
@@ -242,20 +275,13 @@ export default function GigDetails() {
                   >
                     {fav ? "★ Ruajtur në favorites" : "☆ Ruaj në favorites"}
                   </button>
-
-                  <div className="text-xs text-gray-500">
-                   
-                  </div>
                 </div>
               </div>
             </div>
 
-            {}
             <div className="mt-8 pb-10">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-extrabold text-green-900">
-                  Punë të ngjashme
-                </h2>
+                <h2 className="text-xl font-extrabold text-green-900">Punë të ngjashme</h2>
                 <Link to="/gigs" className="text-green-800 hover:underline text-sm">
                   Shiko të gjitha
                 </Link>

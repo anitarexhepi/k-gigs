@@ -10,13 +10,18 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  const resetForm = () => {
+    setEmail("");
+    setPassword("");
+    setError("");
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
       const res = await fetch("http://localhost:5000/api/auth/login", {
-
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -29,13 +34,14 @@ const Login = () => {
         return;
       }
 
-    
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("userId", data.user.id);
+      window.dispatchEvent(new Event("authChanged"));
 
-    
+      resetForm();
+
       switch (data.user.role) {
         case "freelancer":
           navigate("/freelancer-dashboard");
@@ -51,23 +57,22 @@ const Login = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Diçka shkoi gabim gjate kyçjes.");
+      setError("Diçka shkoi gabim gjatë kyçjes.");
     }
   };
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-5xl bg-white shadow-lg rounded-2xl overflow-hidden grid md:grid-cols-2">
-        
         <div className="p-10 bg-[#f9f9f9]">
           <h2
             className="text-4xl font-bold mb-8"
             style={{ color: "rgb(100, 146, 104)" }}
           >
-            Kyçje ne K-gigs
+            Kyçje në K-Gigs
           </h2>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
             <div>
               <label className="block text-sm font-semibold mb-2">Emaili</label>
               <motion.div
@@ -79,9 +84,10 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Shkruaj emailin tend"
+                  placeholder="Shkruaj emailin tënd"
                   className="w-full bg-transparent outline-none text-sm"
                   required
+                  autoComplete="off"
                 />
               </motion.div>
             </div>
@@ -99,9 +105,10 @@ const Login = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Shkruaj fjalekalimin"
+                  placeholder="Shkruaj fjalëkalimin"
                   className="w-full bg-transparent outline-none text-sm"
                   required
+                  autoComplete="new-password"
                 />
               </motion.div>
             </div>
@@ -126,7 +133,10 @@ const Login = () => {
 
           <p className="mt-6 text-sm text-gray-700 text-center">
             Nuk ke llogari?{" "}
-            <span className="text-[#6fd09e] underline cursor-pointer">
+            <span
+              onClick={() => navigate("/signup")}
+              className="text-[#6fd09e] underline cursor-pointer"
+            >
               Regjistrohu
             </span>
           </p>
@@ -146,10 +156,10 @@ const Login = () => {
             className="text-center px-8"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-snug">
-              Filloni rrugetimin tuaj në K-gigs!
+              Filloni rrugëtimin tuaj në K-Gigs!
             </h2>
             <p className="mt-4 text-white text-sm">
-              Lidhuni me punedhenesit apo ofruesit e sherbimeve qe ju pershtaten.
+              Lidhuni me punëdhënësit apo ofruesit e shërbimeve që ju përshtaten.
             </p>
           </motion.div>
         </div>

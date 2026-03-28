@@ -12,9 +12,10 @@ import PunedhenesDashboard from "./components/PunedhenesDashboard";
 import ProtectedPunedhenesRoute from "./components/ProtectedPunedhenesRoute";
 import AdminDashboard from "./components/AdminDashboard";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
+import ProtectedFreelancerRoute from "./components/ProtectedFreelancerRoute";
+import FreelancerDashboard from "./components/FreelancerDashboard";
 import GigsPage from "./components/GigsPage";
 import GigDetails from "./components/GigDetails";
-
 
 function App() {
   return (
@@ -31,6 +32,16 @@ function App() {
           {/* Auth */}
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
+
+          {/* Freelancer */}
+          <Route
+            path="/freelancer-dashboard"
+            element={
+              <ProtectedFreelancerRoute>
+                <FreelancerDashboard />
+              </ProtectedFreelancerRoute>
+            }
+          />
 
           {/* Admin */}
           <Route
@@ -66,6 +77,4 @@ function App() {
   );
 }
 
-
 export default App;
-
