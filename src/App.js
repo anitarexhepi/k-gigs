@@ -8,6 +8,7 @@ import ContactUs from "./components/ContactUs";
 import SignUp from './components/SignUp';
 import Login from './components/Login';
 import PostGig from "./components/PostGig";
+import EditGig from "./components/EditGig";
 import PunedhenesDashboard from "./components/PunedhenesDashboard";
 import ProtectedPunedhenesRoute from "./components/ProtectedPunedhenesRoute";
 import AdminDashboard from "./components/AdminDashboard";
@@ -68,6 +69,15 @@ function App() {
             element={
               <ProtectedPunedhenesRoute>
                 <PunedhenesDashboard />
+              </ProtectedPunedhenesRoute>
+            }
+          />
+
+          <Route
+            path="/edit-gig/:id"
+            element={
+              <ProtectedPunedhenesRoute>
+                <EditGig />
               </ProtectedPunedhenesRoute>
             }
           />

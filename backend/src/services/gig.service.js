@@ -87,6 +87,25 @@ class GigService {
     await Gig.delete(gigId);
     return { success: true };
   }
+
+static async getMyGigs(user) {
+  const role = (user?.role || "").trim().toLowerCase();
+
+  if (role !== "punedhenes" && role !== "admin") {
+    const err = new Error("Vetëm punëdhënësi mundet me i pa gig-et e veta");
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const result = await Gig.findAll({
+   
+  });
+
+  
+  const myGigs = result.items.filter(gig => gig.user_id === user.id);
+
+  return myGigs;
+}
 }
 
 module.exports = GigService;

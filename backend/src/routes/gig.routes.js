@@ -11,6 +11,7 @@ router.get("/test", (req, res) => {
 router.get("/meta", gigController.getMeta);
 
 router.get("/", gigController.listGigs);
+router.get("/my-gigs", auth, role(["punedhenes"]), gigController.getMyGigs);
 router.get("/:id", gigController.getGig);
 
 router.post("/", auth, role(["punedhenes"]), gigController.createGig);

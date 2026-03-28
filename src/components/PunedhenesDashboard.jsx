@@ -30,7 +30,6 @@ const PunedhenesDashboard = () => {
     if (token && role === "punedhenes") fetchGigs();
   }, [token, role]);
 
- 
   if (!token) return <Navigate to="/login" />;
   if (role !== "punedhenes") return <Navigate to="/" />;
 
@@ -41,17 +40,32 @@ const PunedhenesDashboard = () => {
       <h1 className="text-3xl font-bold mb-6 text-[#36563c]">
         My Posted Gigs
       </h1>
+
       {myGigs.length === 0 && (
         <p className="text-gray-500">Nuk keni postuar ende gig-e.</p>
       )}
 
       <div className="grid md:grid-cols-2 gap-6">
         {myGigs.map((gig) => (
-          <div key={gig.id} className="bg-white p-5 rounded shadow">
-            <h2 className="font-bold">{gig.title}</h2>
-            <p className="text-sm text-gray-600">
+          <div
+            key={gig.id}
+            className="bg-white p-5 rounded-xl shadow hover:shadow-lg transition"
+          >
+            <h2 className="font-bold text-lg text-[#2e4d35] mb-2">
+              {gig.title}
+            </h2>
+
+            <p className="text-sm text-gray-600 mb-4">
               {gig.location} · €{gig.budget}
             </p>
+
+            {/* BUTTON */}
+            <button
+              onClick={() => navigate(`/gigs/${gig.id}`)}
+              className="bg-[#36563c] text-white px-4 py-2 rounded-full text-sm hover:bg-[#2e4d35]"
+            >
+              Shiko detajet
+            </button>
           </div>
         ))}
       </div>
@@ -60,10 +74,3 @@ const PunedhenesDashboard = () => {
 };
 
 export default PunedhenesDashboard;
-
-
-
-
-
-
-

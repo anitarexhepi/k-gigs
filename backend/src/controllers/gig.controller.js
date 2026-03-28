@@ -53,3 +53,12 @@ exports.deleteGig = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.getMyGigs = async (req, res, next) => {
+  try {
+    const data = await GigService.getMyGigs(req.user);
+    res.json({ success: true, gigs: data });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -54,6 +54,7 @@ export default function GigDetails() {
   const [err, setErr] = useState("");
 
   const [fav, setFav] = useState(false);
+
   const [similar, setSimilar] = useState([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
 
@@ -99,6 +100,7 @@ export default function GigDetails() {
           page: 1,
           limit: 6,
         });
+
         const items = (data.items || []).filter((x) => String(x.id) !== String(gig.id));
         setSimilar(items.slice(0, 4));
       } catch {
@@ -124,213 +126,77 @@ export default function GigDetails() {
   };
 
   const onApply = async () => {
-    setApplyError("");
-    setApplyMessage("");
-
-    if (!token) {
-      nav("/login");
-      return;
-    }
-
-    if (role !== "freelancer") {
-      setApplyError("Vetëm freelancer mund të aplikojë në një gig.");
-      return;
-    }
+    if (!token) return nav("/login");
+    if (role !== "freelancer") return setApplyError("Vetëm freelancer mund të aplikojë.");
 
     try {
       setApplyLoading(true);
       await applyToGig({
         gig_id: Number(id),
-        cover_letter: "Jam i/e interesuar për këtë gig.",
+        cover_letter: "Jam i interesuar për këtë gig.",
       });
       setApplyMessage("Aplikimi u dërgua me sukses.");
     } catch (err) {
-      console.error(err);
-      setApplyError(err.message || "Aplikimi dështoi.");
+      setApplyError("Aplikimi dështoi.");
     } finally {
       setApplyLoading(false);
     }
   };
 
+  const handleDelete = async () => {
+    const confirmed = window.confirm("A je i sigurt?");
+    if (!confirmed) return;
+
+    await fetch(`http://localhost:5000/api/gigs/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    alert("Gig u fshi");
+    nav("/punedhenes-dashboard");
+  };
+
+  if (loading) return <div className="mt-20 text-center">Loading...</div>;
+
   return (
     <div className="bg-[#e6f0e4] min-h-screen pt-28 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between">
-          <Link to="/gigs" className="text-green-800 hover:underline">
-            ← Kthehu te punët
-          </Link>
+        <Link to="/gigs">← Kthehu</Link>
 
-          <button
-            onClick={() => nav(-1)}
-            className="text-sm px-4 py-2 rounded-full border border-green-700 text-green-800 hover:bg-green-50 transition"
-            type="button"
-          >
-            Kthehu mbrapa
-          </button>
+        <h1 className="text-3xl font-bold mt-4">{gig.title}</h1>
+
+        <div className="bg-white p-6 rounded mt-4">
+          <p>{gig.description}</p>
         </div>
 
-        {loading && <div className="mt-6">Loading...</div>}
+        {/* ACTIONS */}
+        <div className="mt-6 flex flex-col gap-3">
 
-        {err && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 mt-6">
-            {err}
-          </div>
-        )}
+          {role === "punedhenes" ? (
+            <>
+              <button onClick={() => nav(`/edit-gig/${id}`)}>
+                Edito
+              </button>
 
-        {!loading && gig && (
-          <>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-              <div className="lg:col-span-2 bg-white rounded-3xl shadow-md p-7">
-                <h1 className="text-3xl font-extrabold text-green-900">{gig.title}</h1>
-                <div className="text-gray-600 mt-2">
-                  {gig.category || "—"} • {gig.location || "—"}
-                </div>
+              <button onClick={handleDelete}>
+                Fshije
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={onApply} disabled={applyLoading}>
+                {applyLoading ? "Duke aplikuar..." : "Apliko"}
+              </button>
 
-                <hr className="my-6" />
+              <button onClick={toggleFav}>
+                {fav ? "★ Saved" : "☆ Favorite"}
+              </button>
+            </>
+          )}
 
-                <h2 className="text-lg font-bold text-green-900 mb-2">Përshkrimi</h2>
-                <p className="text-gray-700 whitespace-pre-line">
-                  {gig.description || "Nuk ka përshkrim."}
-                </p>
-
-                <hr className="my-6" />
-
-                <h2 className="text-lg font-bold text-green-900 mb-3">Skills</h2>
-                <div className="flex flex-wrap gap-2">
-                  {skills.map((s) => (
-                    <span
-                      key={s}
-                      className="text-sm px-3 py-1 rounded-full bg-green-100 text-green-900"
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-
-                <hr className="my-6" />
-
-                <h2 className="text-lg font-bold text-green-900 mb-2">Kërkesat</h2>
-                <ul className="list-disc pl-6 text-gray-700 space-y-1">
-                  <li>Eksperiencë relevante (ose projekt/portfolio)</li>
-                  <li>Komunikim profesional me klientin</li>
-                  <li>Respektim i afateve dhe cilësisë</li>
-                </ul>
-              </div>
-
-              <div className="bg-white rounded-3xl shadow-md p-7 h-fit">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm text-gray-600">Buxheti</div>
-                    <div className="text-2xl font-extrabold text-green-800">
-                      {gig.budget != null ? `${gig.budget} €` : "—"}
-                    </div>
-                  </div>
-
-                  <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-900">
-                    {String(gig.status || "").toLowerCase() === "closed"
-                      ? "mbyllur"
-                      : "hapur"}
-                  </span>
-                </div>
-
-                <div className="mt-4 text-sm text-gray-700">
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-gray-600">Lokacioni</span>
-                    <span className="font-semibold">{gig.location || "—"}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-gray-600">Kategoria</span>
-                    <span className="font-semibold">{gig.category || "—"}</span>
-                  </div>
-                </div>
-
-                {applyError && (
-                  <div className="mt-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">
-                    {applyError}
-                  </div>
-                )}
-
-                {applyMessage && (
-                  <div className="mt-4 bg-green-50 border border-green-200 text-green-700 rounded-xl p-3 text-sm">
-                    {applyMessage}
-                  </div>
-                )}
-
-                <div className="mt-6 flex flex-col gap-3">
-                  <button
-                    onClick={onApply}
-                    className="w-full px-5 py-3 rounded-2xl bg-green-700 text-white hover:bg-green-800 transition font-semibold disabled:opacity-70"
-                    type="button"
-                    disabled={
-                      String(gig.status || "").toLowerCase() === "closed" || applyLoading
-                    }
-                  >
-                    {applyLoading ? "Duke aplikuar..." : "Apliko"}
-                  </button>
-
-                  <button
-                    onClick={toggleFav}
-                    className="w-full px-5 py-3 rounded-2xl border border-green-700 text-green-800 hover:bg-green-50 transition font-semibold"
-                    type="button"
-                  >
-                    {fav ? "★ Ruajtur në favorites" : "☆ Ruaj në favorites"}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 pb-10">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-extrabold text-green-900">Punë të ngjashme</h2>
-                <Link to="/gigs" className="text-green-800 hover:underline text-sm">
-                  Shiko të gjitha
-                </Link>
-              </div>
-
-              {loadingSimilar && <div className="text-gray-600">Duke ngarkuar…</div>}
-
-              {!loadingSimilar && similar.length === 0 && (
-                <div className="text-gray-700">Nuk ka punë të ngjashme për momentin.</div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {similar.map((g) => (
-                  <div key={g.id} className="bg-white rounded-3xl shadow-md p-6">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-lg font-bold text-green-900">{g.title}</h3>
-                        <div className="text-sm text-gray-600 mt-1">
-                          {g.category || "—"} • {g.location || "—"} •{" "}
-                          <span className="font-semibold text-green-800">
-                            {g.budget != null ? `${g.budget} €` : "—"}
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-xs px-3 py-1 rounded-full bg-green-100 text-green-900">
-                        {String(g.status || "").toLowerCase() === "closed"
-                          ? "mbyllur"
-                          : "hapur"}
-                      </span>
-                    </div>
-
-                    <p className="text-gray-700 mt-4 line-clamp-2">
-                      {g.description || "Nuk ka përshkrim."}
-                    </p>
-
-                    <div className="mt-5 flex justify-end">
-                      <Link
-                        to={`/gigs/${g.id}`}
-                        className="px-5 py-2 rounded-full bg-[#5e7f63] text-white hover:bg-[#4b6a50] transition"
-                      >
-                        Shiko detajet
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+          {applyError && <p className="text-red-500">{applyError}</p>}
+          {applyMessage && <p className="text-green-500">{applyMessage}</p>}
+        </div>
       </div>
     </div>
   );
