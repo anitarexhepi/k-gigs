@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { fetchGigs } from "../api/gigsApi";
-import { fetchMyApplications, fetchMyCv, saveMyCv, deleteMyCv, } from "../api/freelancerApi";
+import {
+  fetchMyApplications,
+  fetchMyCv,
+  saveMyCv,
+  deleteMyCv,
+  updateMyApplication,
+  deleteMyApplication,
+} from "../api/freelancerApi";
 
 function StatCard({ title, value, subtitle }) {
   return (
@@ -39,17 +46,24 @@ function uniqueArray(arr) {
 }
 
 function getCvKeywords(cv) {
-  const skills = String(cv?.skills || "")
+  const normalizedSkills = normalizeText(cv?.skills || "");
+
+  const skillPhrases = normalizedSkills
     .split(",")
     .map((s) => normalizeText(s))
     .filter(Boolean);
+
+  const skillWords = normalizedSkills
+    .split(/[,\s]+/)
+    .map((s) => normalizeText(s))
+    .filter((s) => s.length >= 2);
 
   const bioWords = splitKeywords(cv?.bio || "");
   const expWords = splitKeywords(cv?.experience || "");
   const eduWords = splitKeywords(cv?.education || "");
 
   return {
-    skills: uniqueArray(skills),
+    skills: uniqueArray([...skillPhrases, ...skillWords]),
     bioWords: uniqueArray(bioWords),
     expWords: uniqueArray(expWords),
     eduWords: uniqueArray(eduWords),
@@ -74,19 +88,19 @@ function matchScore(gig, cv) {
     if (!skill) return;
 
     if (gigTitle.includes(skill)) {
-      score += 8;
+      score += skill.includes(" ") ? 8 : 6;
       directMatches += 1;
       return;
     }
 
     if (gigCategory.includes(skill)) {
-      score += 7;
+      score += skill.includes(" ") ? 7 : 5;
       directMatches += 1;
       return;
     }
 
     if (gigDescription.includes(skill)) {
-      score += 5;
+      score += skill.includes(" ") ? 5 : 3;
       directMatches += 1;
     }
   });
@@ -121,7 +135,12 @@ function matchScore(gig, cv) {
     score += 3;
   }
 
-  if (directMatches === 0) {
+  const textOnlyMatches =
+    bioWords.some((word) => gigText.includes(word)) ||
+    expWords.some((word) => gigText.includes(word)) ||
+    eduWords.some((word) => gigText.includes(word));
+
+  if (directMatches === 0 && !textOnlyMatches) {
     return 0;
   }
 
@@ -156,6 +175,10 @@ const FreelancerDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [recommendedGigs, setRecommendedGigs] = useState([]);
 
+  const [editingApplicationId, setEditingApplicationId] = useState(null);
+  const [editingCoverLetter, setEditingCoverLetter] = useState("");
+  const [savingApplication, setSavingApplication] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [savingCv, setSavingCv] = useState(false);
   const [message, setMessage] = useState("");
@@ -171,7 +194,7 @@ const FreelancerDashboard = () => {
         ...gig,
         matchPoints: matchScore(gig, cvData),
       }))
-      .filter((gig) => gig.matchPoints >= 5)
+      .filter((gig) => gig.matchPoints >= 3)
       .sort((a, b) => {
         if (b.matchPoints !== a.matchPoints) {
           return b.matchPoints - a.matchPoints;
@@ -300,14 +323,14 @@ const FreelancerDashboard = () => {
   const handleDeleteCv = async () => {
     const confirmed = window.confirm("A je i sigurt që don me fshi CV-në?");
     if (!confirmed) return;
-  
+
     try {
       setSavingCv(true);
       setError("");
       setMessage("");
-  
+
       await deleteMyCv();
-  
+
       setCv(null);
       setCvForm({
         full_name: "",
@@ -318,15 +341,15 @@ const FreelancerDashboard = () => {
         phone: "",
         city: "",
       });
-  
+
       const [appRes, gigsRes] = await Promise.all([
         fetchMyApplications(),
         fetchGigs({ page: 1, limit: 50, status: "open" }),
       ]);
-  
+
       const appData = appRes.data || [];
       const gigsData = gigsRes.items || [];
-  
+
       setApplications(appData);
       setRecommendedGigs(buildRecommendedGigs(gigsData, appData, null));
       setMessage("CV u fshi me sukses.");
@@ -335,6 +358,73 @@ const FreelancerDashboard = () => {
       setError(err.message || "Gabim gjatë fshirjes së CV-së");
     } finally {
       setSavingCv(false);
+    }
+  };
+
+  const handleStartEditApplication = (app) => {
+    setEditingApplicationId(app.id);
+    setEditingCoverLetter(app.cover_letter || "");
+    setMessage("");
+    setError("");
+  };
+
+  const handleCancelEditApplication = () => {
+    setEditingApplicationId(null);
+    setEditingCoverLetter("");
+  };
+
+  const handleSaveApplication = async (applicationId) => {
+    try {
+      setSavingApplication(true);
+      setError("");
+      setMessage("");
+
+      await updateMyApplication(applicationId, {
+        cover_letter: editingCoverLetter,
+      });
+
+      const appRes = await fetchMyApplications();
+      const appData = appRes.data || [];
+      setApplications(appData);
+
+      setEditingApplicationId(null);
+      setEditingCoverLetter("");
+      setMessage("Aplikimi u përditësua me sukses.");
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Gabim gjatë përditësimit të aplikimit");
+    } finally {
+      setSavingApplication(false);
+    }
+  };
+
+  const handleDeleteApplication = async (applicationId) => {
+    const confirmed = window.confirm("A je i sigurt që don me tërheq këtë aplikim?");
+    if (!confirmed) return;
+
+    try {
+      setSavingApplication(true);
+      setError("");
+      setMessage("");
+
+      await deleteMyApplication(applicationId);
+
+      const [appRes, gigsRes] = await Promise.all([
+        fetchMyApplications(),
+        fetchGigs({ page: 1, limit: 50, status: "open" }),
+      ]);
+
+      const appData = appRes.data || [];
+      const gigsData = gigsRes.items || [];
+
+      setApplications(appData);
+      setRecommendedGigs(buildRecommendedGigs(gigsData, appData, cv));
+      setMessage("Aplikimi u tërhoq me sukses.");
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Gabim gjatë fshirjes së aplikimit");
+    } finally {
+      setSavingApplication(false);
     }
   };
 
@@ -495,41 +585,39 @@ const FreelancerDashboard = () => {
                 </div>
 
                 <div className="flex flex-col items-end gap-3">
-  {message && (
-    <div className="w-full bg-green-50 border border-green-200 text-green-700 rounded-2xl p-4 text-sm">
-      {message}
-    </div>
-  )}
+                  {message && (
+                    <div className="w-full bg-green-50 border border-green-200 text-green-700 rounded-2xl p-4 text-sm">
+                      {message}
+                    </div>
+                  )}
 
-  {error && (
-    <div className="w-full bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm">
-      {error}
-    </div>
-  )}
+                  {error && (
+                    <div className="w-full bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm">
+                      {error}
+                    </div>
+                  )}
 
-  <div className="flex gap-3">
-    {cv && (
-      <button
-        type="button"
-        onClick={handleDeleteCv}
-        disabled={savingCv}
-        className="px-6 py-3 rounded-2xl border border-red-500 text-red-600 font-semibold hover:bg-red-50 transition disabled:opacity-70"
-      >
-        Fshije CV-në
-      </button>
-    )}
+                  <div className="flex gap-3">
+                    {cv && (
+                      <button
+                        type="button"
+                        onClick={handleDeleteCv}
+                        disabled={savingCv}
+                        className="px-6 py-3 rounded-2xl border border-red-500 text-red-600 font-semibold hover:bg-red-50 transition disabled:opacity-70"
+                      >
+                        Fshije CV-në
+                      </button>
+                    )}
 
-    <button
-      type="submit"
-      disabled={savingCv}
-      className="px-6 py-3 rounded-2xl bg-[#4f6d54] text-white font-semibold hover:bg-[#3f5944] transition disabled:opacity-70"
-    >
-      {savingCv ? "Duke u ruajtur..." : cv ? "Përditëso CV" : "Ruaj CV"}
-    </button>
-  </div>
-</div>
-
-                
+                    <button
+                      type="submit"
+                      disabled={savingCv}
+                      className="px-6 py-3 rounded-2xl bg-[#4f6d54] text-white font-semibold hover:bg-[#3f5944] transition disabled:opacity-70"
+                    >
+                      {savingCv ? "Duke u ruajtur..." : cv ? "Përditëso CV" : "Ruaj CV"}
+                    </button>
+                  </div>
+                </div>
               </form>
             </section>
 
@@ -551,23 +639,72 @@ const FreelancerDashboard = () => {
                   {applications.map((app) => (
                     <div
                       key={app.id}
-                      className="border rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap"
+                      className="border rounded-2xl p-4 flex items-start justify-between gap-4 flex-wrap"
                     >
-                      <div>
+                      <div className="flex-1 min-w-[260px]">
                         <h3 className="font-bold text-[#36563c]">
                           {app.gig_title || `Gig #${app.gig_id}`}
                         </h3>
+
                         <p className="text-sm text-gray-500 mt-1">
                           Aplikuar më{" "}
                           {app.applied_at
                             ? new Date(app.applied_at).toLocaleDateString()
                             : "—"}
                         </p>
-                        {app.cover_letter ? (
-                          <p className="text-sm text-gray-700 mt-2 line-clamp-2">
-                            {app.cover_letter}
-                          </p>
-                        ) : null}
+
+                        {editingApplicationId === app.id ? (
+                          <div className="mt-3">
+                            <textarea
+                              value={editingCoverLetter}
+                              onChange={(e) => setEditingCoverLetter(e.target.value)}
+                              rows={4}
+                              className="w-full border rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
+                              placeholder="Përditëso cover letter..."
+                            />
+
+                            <div className="flex gap-3 mt-3">
+                              <button
+                                onClick={() => handleSaveApplication(app.id)}
+                                disabled={savingApplication}
+                                className="px-4 py-2 rounded-xl bg-[#4f6d54] text-white font-semibold hover:bg-[#3f5944] transition disabled:opacity-70"
+                              >
+                                {savingApplication ? "Duke ruajtur..." : "Ruaj"}
+                              </button>
+
+                              <button
+                                onClick={handleCancelEditApplication}
+                                disabled={savingApplication}
+                                className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition"
+                              >
+                                Anulo
+                              </button>
+                            </div>
+                          </div>
+                        ) : app.cover_letter ? (
+                          <p className="text-sm text-gray-700 mt-2">{app.cover_letter}</p>
+                        ) : (
+                          <p className="text-sm text-gray-400 mt-2">Pa cover letter</p>
+                        )}
+
+                        {app.status === "pending" && editingApplicationId !== app.id && (
+                          <div className="flex gap-3 mt-4">
+                            <button
+                              onClick={() => handleStartEditApplication(app)}
+                              className="px-4 py-2 rounded-xl border border-[#4f6d54] text-[#36563c] font-semibold hover:bg-green-50 transition"
+                            >
+                              Edito
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteApplication(app.id)}
+                              disabled={savingApplication}
+                              className="px-4 py-2 rounded-xl border border-red-400 text-red-600 font-semibold hover:bg-red-50 transition disabled:opacity-70"
+                            >
+                              Tërhiqe aplikimin
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <span
@@ -592,7 +729,10 @@ const FreelancerDashboard = () => {
             <section className="bg-white rounded-3xl shadow-md p-7">
               <SectionTitle>Recommended Gigs</SectionTitle>
 
-              {!cvForm.skills.trim() && !cvForm.bio.trim() && !cvForm.experience.trim() && !cvForm.city.trim() ? (
+              {!cvForm.skills.trim() &&
+              !cvForm.bio.trim() &&
+              !cvForm.experience.trim() &&
+              !cvForm.city.trim() ? (
                 <p className="text-gray-600">
                   Plotëso CV-në që të marrësh rekomandime të sakta.
                 </p>

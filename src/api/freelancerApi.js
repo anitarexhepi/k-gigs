@@ -55,3 +55,20 @@ export async function applyToGig(payload) {
   });
   return parseResponse(res);
 }
+
+export async function updateMyApplication(id, payload) {
+  const res = await fetch(`${API_BASE}/api/applications/${id}`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(res);
+}
+
+export async function deleteMyApplication(id) {
+  const res = await fetch(`${API_BASE}/api/applications/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  return parseResponse(res);
+}
