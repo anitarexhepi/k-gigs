@@ -113,7 +113,7 @@ exports.updateStatus = async (req, res, next) => {
     const role = (req.user.role || "").toLowerCase();
     const userId = req.user.id;
 
-    if (role !== "employer") {
+    if (role !== "punedhenes") {
       return res.status(403).json({
         success: false,
         message: "Vetëm punëdhënësi mund të ndryshojë statusin",

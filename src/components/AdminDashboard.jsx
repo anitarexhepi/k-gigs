@@ -10,13 +10,26 @@ const emptyForm = {
   role: "freelancer",
 };
 
+const emptyMessageForm = {
+  id: null,
+  full_name: "",
+  email: "",
+  phone: "",
+  message: "",
+  status: "new",
+};
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [err, setErr] = useState("");
   const [q, setQ] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [form, setForm] = useState(emptyForm);
+
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [messageForm, setMessageForm] = useState(emptyMessageForm);
 
   const token = localStorage.getItem("token");
 
@@ -36,8 +49,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadMessages = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/contact");
+      const json = await res.json();
+      setMessages(json.data || []);
+    } catch (err) {
+      console.error("Error loading messages:", err);
+    }
+  };
+
   useEffect(() => {
     load();
+    loadMessages();
   }, []);
 
   const resetForm = () => {
@@ -98,12 +122,7 @@ export default function AdminDashboard() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(
-          isEditing
-            ? payload
-            : {
-                ...payload,
-                password: form.password,
-              }
+          isEditing ? payload : { ...payload, password: form.password }
         ),
       });
 
@@ -115,7 +134,7 @@ export default function AdminDashboard() {
         );
       }
 
-      alert(isEditing ? "User u përditësua!" : "User u krijua!");
+      alert(isEditing ? "User u perditesua!" : "User u krijua!");
       resetForm();
       load();
     } catch (e) {
@@ -124,7 +143,7 @@ export default function AdminDashboard() {
   };
 
   const deleteUser = async (id) => {
-    if (!window.confirm("A je i sigurt që don me fshi këtë user?")) return;
+    if (!window.confirm("A je i sigurt qe don me fshi kete user?")) return;
 
     try {
       setErr("");
@@ -139,9 +158,7 @@ export default function AdminDashboard() {
 
       setUsers((prev) => prev.filter((u) => u.id !== id));
 
-      if (editingUserId === id) {
-        resetForm();
-      }
+      if (editingUserId === id) resetForm();
     } catch (e) {
       setErr(e.message);
     }
@@ -179,6 +196,69 @@ export default function AdminDashboard() {
       );
     } catch (e) {
       setErr(e.message);
+    }
+  };
+
+  const openEditMessage = (msg) => {
+    setEditingMessageId(msg.id);
+    setMessageForm({
+      id: msg.id,
+      full_name: msg.full_name || "",
+      email: msg.email || "",
+      phone: msg.phone || "",
+      message: msg.message || "",
+      status: msg.status || "new",
+    });
+  };
+
+  const cancelEditMessage = () => {
+    setEditingMessageId(null);
+    setMessageForm(emptyMessageForm);
+  };
+
+  const saveMessage = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/contact/${messageForm.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(messageForm),
+        }
+      );
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.message || "Gabim ne perditesim");
+
+      alert("Mesazhi u perditesua me sukses");
+      cancelEditMessage();
+      loadMessages();
+    } catch (err) {
+      alert(err.message || "Gabim ne perditesim");
+    }
+  };
+
+  const deleteMessage = async (id) => {
+    const confirmed = window.confirm("A je i sigurt qe don me fshi kete mesazh?");
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/contact/${id}`, {
+        method: "DELETE",
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.message || "Gabim ne fshirje");
+
+      setMessages((prev) => prev.filter((m) => m.id !== id));
+
+      if (editingMessageId === id) {
+        cancelEditMessage();
+      }
+    } catch (err) {
+      alert(err.message || "Gabim ne fshirje");
     }
   };
 
@@ -230,8 +310,7 @@ export default function AdminDashboard() {
         <div className="bg-gradient-to-r from-[#5f8367] to-[#8ab48c] text-white rounded-3xl shadow-lg p-8 mb-8">
           <h1 className="text-4xl font-extrabold">Admin Dashboard</h1>
           <p className="mt-3 text-white/90 max-w-2xl">
-            Menaxho përdoruesit, rolet dhe statusin aktiv të llogarive në një
-            vend.
+            Menaxho perdoruesit, rolet dhe statusin aktiv te llogarive ne nje vend.
           </p>
         </div>
 
@@ -244,7 +323,7 @@ export default function AdminDashboard() {
         {showForm && (
           <div className="bg-white rounded-3xl shadow-md p-6 mb-8 border border-green-100">
             <h2 className="text-2xl font-bold text-[#36563c] mb-5">
-              {editingUserId !== null ? "Përditëso User" : "Krijo User të Ri"}
+              {editingUserId !== null ? "Perditeso User" : "Krijo User te Ri"}
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -252,27 +331,20 @@ export default function AdminDashboard() {
                 className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
                 placeholder="First name"
                 value={form.first_name}
-                onChange={(e) =>
-                  setForm({ ...form, first_name: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, first_name: e.target.value })}
               />
-
               <input
                 className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
                 placeholder="Last name"
                 value={form.last_name}
-                onChange={(e) =>
-                  setForm({ ...form, last_name: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, last_name: e.target.value })}
               />
-
               <input
                 className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
                 placeholder="Email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
-
               <input
                 className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
                 placeholder={
@@ -282,32 +354,27 @@ export default function AdminDashboard() {
                 }
                 type="password"
                 value={form.password}
-                onChange={(e) =>
-                  setForm({ ...form, password: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
-
               <input
                 className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
                 placeholder="Phone"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
               />
-
               <input
                 className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
                 placeholder="City"
                 value={form.city}
                 onChange={(e) => setForm({ ...form, city: e.target.value })}
               />
-
               <select
                 className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300 bg-white"
                 value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value })}
               >
                 <option value="freelancer">Freelancer</option>
-                <option value="punedhenes">Punëdhënës</option>
+                <option value="punedhenes">Punedhenes</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
@@ -342,8 +409,7 @@ export default function AdminDashboard() {
             Activation rate{" "}
             <span className="font-bold text-[#36563c]">{stats.activeRate}%</span>
             {" • "}
-            Admins{" "}
-            <span className="font-bold text-[#36563c]">{stats.admins}</span>
+            Admins <span className="font-bold text-[#36563c]">{stats.admins}</span>
           </div>
 
           <div className="lg:ml-auto w-full lg:w-auto">
@@ -386,7 +452,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="bg-white rounded-3xl shadow-md p-5">
-            <p className="text-sm text-gray-500">Punëdhënës</p>
+            <p className="text-sm text-gray-500">Punedhenes</p>
             <h3 className="text-3xl font-extrabold text-[#36563c] mt-2">
               {stats.punedhenes}
             </h3>
@@ -479,6 +545,120 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div className="mt-10">
+          <h2 className="text-2xl font-bold text-[#36563c] mb-4">
+            Mesazhet nga Contact Us
+          </h2>
+
+          {messages.length === 0 ? (
+            <p className="text-gray-500">Nuk ka mesazhe ende.</p>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((m) => (
+                <div
+                  key={m.id}
+                  className="bg-white p-5 rounded-2xl shadow border border-green-100"
+                >
+                  {editingMessageId === m.id ? (
+                    <div className="space-y-3">
+                      <input
+                        value={messageForm.full_name}
+                        onChange={(e) =>
+                          setMessageForm({ ...messageForm, full_name: e.target.value })
+                        }
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                        placeholder="Emri"
+                      />
+                      <input
+                        value={messageForm.email}
+                        onChange={(e) =>
+                          setMessageForm({ ...messageForm, email: e.target.value })
+                        }
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                        placeholder="Email"
+                      />
+                      <input
+                        value={messageForm.phone}
+                        onChange={(e) =>
+                          setMessageForm({ ...messageForm, phone: e.target.value })
+                        }
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                        placeholder="Telefoni"
+                      />
+                      <textarea
+                        value={messageForm.message}
+                        onChange={(e) =>
+                          setMessageForm({ ...messageForm, message: e.target.value })
+                        }
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3"
+                        rows="4"
+                        placeholder="Mesazhi"
+                      />
+                      <select
+                        value={messageForm.status}
+                        onChange={(e) =>
+                          setMessageForm({ ...messageForm, status: e.target.value })
+                        }
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-white"
+                      >
+                        <option value="new">new</option>
+                        <option value="read">read</option>
+                        <option value="replied">replied</option>
+                      </select>
+
+                      <div className="flex gap-3 flex-wrap">
+                        <button
+                          onClick={saveMessage}
+                          className="px-4 py-2 rounded-xl bg-[#4f6d54] text-white font-semibold hover:bg-[#3f5944]"
+                        >
+                          Ruaj
+                        </button>
+                        <button
+                          onClick={cancelEditMessage}
+                          className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
+                        >
+                          Anulo
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p><strong>Emri:</strong> {m.full_name}</p>
+                      <p><strong>Email:</strong> {m.email}</p>
+                      <p><strong>Telefoni:</strong> {m.phone}</p>
+                      <p><strong>Status:</strong> {m.status || "new"}</p>
+                      <p><strong>Mesazhi:</strong> {m.message}</p>
+
+                      <div className="flex gap-3 flex-wrap mt-4">
+                        <button
+                          onClick={() => openEditMessage(m)}
+                          className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
+                        >
+                          Edito
+                        </button>
+
+                        <button
+                          onClick={() => deleteMessage(m.id)}
+                          className="px-4 py-2 rounded-xl border border-red-300 text-red-600 font-semibold hover:bg-red-50"
+                        >
+                          Fshije
+                        </button>
+
+                        <a
+                          href={`mailto:${m.email}?subject=Pergjigje nga K-Gigs&body=Pershendetje ${m.full_name},%0D%0A%0D%0AFaleminderit per mesazhin tuaj.`}
+                          className="px-4 py-2 rounded-xl bg-[#36563c] text-white font-semibold hover:bg-[#2e4d35]"
+                        >
+                          Reply
+                        </a>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -40,7 +40,7 @@ const Footer = () => {
         </div>
       </div>
 
-      <div className="border-t border-[#3a6b46] pt-6 text-center text-xs text-[#e6f0e4]">
+     <div className="pt-6 text-center text-xs text-[#e6f0e4]">
         &copy; {new Date().getFullYear()} K-Gigs. Të gjitha të drejtat e rezervuara.
       </div>
     </footer>

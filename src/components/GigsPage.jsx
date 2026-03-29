@@ -178,7 +178,7 @@ export default function GigsPage() {
   };
 
   return (
-    <div className="bg-[#e6f0e4] min-h-screen pt-28 px-4">
+    <div className="bg-[#e6f0e4] min-h-screen pt-28 px-4 pb-24">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-extrabold text-green-900 mb-6">
           Punët

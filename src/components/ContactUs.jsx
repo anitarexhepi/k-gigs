@@ -1,107 +1,195 @@
-import React from "react";
-import { Phone, Mail, Globe } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
 import Navbar from "../components/Navbar";
 
 const ContactUs = () => {
+  const [form, setForm] = useState({
+    email: "",
+    phone: "",
+    full_name: "",
+    message: "",
+  });
+
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const newErrors = {};
+
+    if (!form.email.trim()) {
+      newErrors.email = "Email eshte i detyrueshem";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "Email nuk eshte valid";
+    }
+
+    if (!form.phone.trim()) {
+      newErrors.phone = "Telefoni eshte i detyrueshem";
+    } else if (!/^\d{6,15}$/.test(form.phone)) {
+      newErrors.phone = "Telefoni duhet te kete vetem numra (6-15 shifra)";
+    }
+
+    if (!form.full_name.trim()) {
+      newErrors.full_name = "Emri eshte i detyrueshem";
+    } else if (!/^[A-Za-zÇçËë\s]+$/.test(form.full_name)) {
+      newErrors.full_name = "Emri duhet te permbaje vetem shkronja";
+    }
+
+    if (!form.message.trim()) {
+      newErrors.message = "Mesazhi eshte i detyrueshem";
+    } else if (form.message.trim().length < 5) {
+      newErrors.message = "Mesazhi duhet te kete te pakten 5 karaktere";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "full_name" && !/^[A-Za-zÇçËë\s]*$/.test(value)) {
+      return;
+    }
+
+    if (name === "phone" && !/^\d*$/.test(value)) {
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[name];
+      return updated;
+    });
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+
+    try {
+      const res = await fetch("http://localhost:5000/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Gabim gjate dergimit");
+      }
+
+      alert("Mesazhi u dergua me sukses!");
+
+      setForm({
+        email: "",
+        phone: "",
+        full_name: "",
+        message: "",
+      });
+
+      setErrors({});
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Gabim gjate dergimit!");
+    }
+  };
+
   return (
     <div className="bg-[#e6f0e4] min-h-screen font-sans text-gray-800">
       <Navbar />
 
-      <header className="relative h-[32rem] w-full bg-[#d3e4cd] flex items-center justify-center px-4">
-        <div
-          className="absolute inset-0 bg-cover bg-center z-0"
-          style={{ backgroundImage: "url('/img/contact-bg.jpg')" }}
-        ></div>
-
-        <div className="absolute inset-0 bg-white/50 z-10"></div>
-
-        <div className="relative z-20 text-green-900 text-center">
-          <motion.h1
-            className="text-5xl font-extrabold drop-shadow-lg font-poppins"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            Na Kontakto
-          </motion.h1>
-          <motion.p
-            className="mt-4 max-w-xl text-lg text-green-800  drop-shadow-md mx-auto font-nunito"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            Na shkruani për çdo pyetje apo sugjerim — jemi këtu për t’ju ndihmuar!
-          </motion.p>
-        </div>
-      </header>
-
-      <section className="flex items-center justify-center px-4 my-16">
-        <motion.div
-          className="w-full max-w-3xl bg-gradient-to-br from-[#d3e4cd] to-[#b8cab6] border border-[#a4bba0] rounded-2xl shadow-2xl p-10 space-y-6 backdrop-blur-sm"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
+      <section className="flex items-center justify-center px-4 pt-24 pb-16">
+        <div className="w-full max-w-3xl bg-gradient-to-br from-[#d3e4cd] to-[#b8cab6] border border-[#a4bba0] rounded-2xl shadow-2xl p-10 space-y-6">
           <h2 className="text-3xl font-bold text-green-800 text-center mb-4">
             Kontaktoni me ne
           </h2>
+
           <div className="grid md:grid-cols-2 gap-4">
-            <input
-              type="email"
-              placeholder="Email"
-              className="bg-white p-4 rounded-md w-full outline-none shadow-sm focus:ring-2 focus:ring-green-600"
-            />
+            <div>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Email"
+                className={`bg-white p-4 rounded-md w-full outline-none shadow-sm focus:ring-2 ${
+                  errors.email
+                    ? "border border-red-500 focus:ring-red-400"
+                    : "focus:ring-green-600"
+                }`}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>
+
+            <div>
+              <input
+                type="text"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="Telefoni"
+                className={`bg-white p-4 rounded-md w-full outline-none shadow-sm focus:ring-2 ${
+                  errors.phone
+                    ? "border border-red-500 focus:ring-red-400"
+                    : "focus:ring-green-600"
+                }`}
+              />
+              {errors.phone && (
+                <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+              )}
+            </div>
+          </div>
+
+          <div>
             <input
               type="text"
-              placeholder="Telefoni"
-              className="bg-white p-4 rounded-md w-full outline-none shadow-sm focus:ring-2 focus:ring-green-600"
+              name="full_name"
+              value={form.full_name}
+              onChange={handleChange}
+              placeholder="Emri i plote"
+              className={`bg-white p-4 rounded-md w-full outline-none shadow-sm focus:ring-2 ${
+                errors.full_name
+                  ? "border border-red-500 focus:ring-red-400"
+                  : "focus:ring-green-600"
+              }`}
             />
+            {errors.full_name && (
+              <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>
+            )}
           </div>
-          <input
-            type="text"
-            placeholder="Emri i plotë"
-            className="bg-white p-4 rounded-md w-full outline-none shadow-sm focus:ring-2 focus:ring-green-600"
-          />
-          <textarea
-            placeholder="Mesazhi juaj"
-            rows="4"
-            className="bg-white p-4 rounded-md w-full outline-none shadow-sm focus:ring-2 focus:ring-green-600"
-          ></textarea>
-          <button className="bg-green-700 text-white px-6 py-3 rounded-full hover:bg-green-800 transition-all shadow-md hover:scale-105">
-            Dërgo Mesazh
-          </button>
-        </motion.div>
-      </section>
 
-      <section className="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-6 pb-20">
-        {[
-          {
-            icon: <Phone size={32} className="text-green-800" />,
-            title: "(+383) 123 456",
-            desc: "Na kontaktoni në çdo kohë",
-          },
-          {
-            icon: <Mail size={32} className="text-green-800" />,
-            title: "support@k-gigs.com",
-            desc: "Na dërgoni një email kurdo që dëshironi",
-          },
-          {
-            icon: <Globe size={32} className="text-green-800" />,
-            title: "100% Online",
-            desc: "Nuk kemi zyrë fizike, punojmë në distancë",
-          },
-        ].map((box, i) => (
-          <motion.div
-            key={i}
-            className="bg-[#d3e4cd] text-center p-6 rounded-xl shadow hover:shadow-xl transition-all"
-            whileHover={{ scale: 1.05 }}
+          <div>
+            <textarea
+              name="message"
+              value={form.message}
+              onChange={handleChange}
+              placeholder="Mesazhi juaj"
+              rows="4"
+              className={`bg-white p-4 rounded-md w-full outline-none shadow-sm focus:ring-2 ${
+                errors.message
+                  ? "border border-red-500 focus:ring-red-400"
+                  : "focus:ring-green-600"
+              }`}
+            ></textarea>
+            {errors.message && (
+              <p className="text-red-500 text-sm mt-1">{errors.message}</p>
+            )}
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            className="bg-green-700 text-white px-6 py-3 rounded-full hover:bg-green-800 transition-all shadow-md hover:scale-105"
           >
-            <div className="mb-2">{box.icon}</div>
-            <h3 className="text-lg font-semibold text-green-900">{box.title}</h3>
-            <p className="text-sm text-green-900">{box.desc}</p>
-          </motion.div>
-        ))}
+            Dergo Mesazh
+          </button>
+        </div>
       </section>
     </div>
   );

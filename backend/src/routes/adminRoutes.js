@@ -47,5 +47,14 @@ router.delete(
   AdminController.deleteUser
 );
 
+router.get(
+  "/messages",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  (req, res) => {
+    res.json(require("../routes/contact.routes").messages || []);
+  }
+);
+
 
 module.exports = router;

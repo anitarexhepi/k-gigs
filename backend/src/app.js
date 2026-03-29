@@ -6,6 +6,8 @@ const adminRoutes = require("./routes/adminRoutes");
 const gigRoutes = require("./routes/gig.routes");
 const applicationRoutes = require("./routes/application.routes");
 const cvRoutes = require("./routes/cv.routes");
+const contactRoutes = require("./routes/contact.routes");
+
 
 const app = express();
 
@@ -23,6 +25,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/gigs", gigRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/cv", cvRoutes);
+app.use("/api/contact", contactRoutes);
+
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
