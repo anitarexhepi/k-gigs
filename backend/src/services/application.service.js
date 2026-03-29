@@ -108,7 +108,19 @@ exports.deleteMine = async (id, user_id) => {
   return { success: true };
 };
 
-exports.updateStatus = async (id, status) => {
+exports.updateStatus = async (id, status, user_id) => {
+  const application = await Application.findById(id);
+
+  if (!application) {
+    throw new Error("Application not found");
+  }
+
+  if (Number(application.gig_owner_id) !== Number(user_id)) {
+    const e = new Error("Nuk keni të drejtë ta ndryshoni këtë aplikim");
+    e.statusCode = 403;
+    throw e;
+  }
+
   const allowedStatuses = ["pending", "accepted", "rejected"];
 
   if (!allowedStatuses.includes((status || "").toLowerCase())) {
@@ -117,11 +129,5 @@ exports.updateStatus = async (id, status) => {
     throw e;
   }
 
-  const updated = await Application.updateStatus(id, status);
-  if (!updated) {
-    const e = new Error("Application not found");
-    e.statusCode = 404;
-    throw e;
-  }
-  return updated;
+  return Application.updateStatus(id, status);
 };

@@ -1,70 +1,79 @@
-# Getting Started with Create React App
+# K-Gigs Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+K-Gigs eshte nje platforme per lidhjen e freelancer-eve me punedhenesit.  
+Punedhenesit mund te postojne pune (gigs), ndersa freelancer-et mund te aplikojne per to.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Teknologjite e perdorura
 
-### `npm start`
+### Frontend
+- React.js
+- Tailwind CSS
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Backend
+- Node.js
+- Express.js
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Databaza
+- MySQL
 
-### `npm test`
+### Autentifikimi
+- JSON Web Token (JWT)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## Funksionalitetet kryesore
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Users
+- Regjistrim dhe login
+- Role: freelancer, punedhenes, admin
+- Admin mund te:
+  - krijoje user
+  - perditesoje user
+  - fshije user
+  - aktivizoje/deaktivizoje user
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Gigs (Pune)
+- Punedhenesi mund te:
+  - krijoje gig
+  - perditesoje gig
+  - fshije gig
+  - shohe aplikimet per gig
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### CV
+- Freelancer mund te:
+  - krijoje CV
+  - perditesoje CV
+  - fshije CV
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Applications
+- Freelancer mund te:
+  - aplikoje per nje gig
+  - perditesoje aplikimin
+  - terheqe aplikimin
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+- Punedhenesi mund te:
+  - shohe aplikimet
+  - pranoje/refuzoje aplikimet
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Dashboard
+- Freelancer Dashboard
+- Punedhenes Dashboard
+- Admin Dashboard
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## Si te startohet projekti
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### 1. Clone repo
+```bash
+git clone https://github.com/anitarexhepi/k-gigs.git

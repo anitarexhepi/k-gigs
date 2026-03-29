@@ -110,13 +110,18 @@ exports.updateStatus = async (req, res, next) => {
     const id = Number(req.params.id);
     const { status } = req.body;
 
-    if (!status) {
-      return res
-        .status(400)
-        .json({ success: false, message: "status is required" });
+    const role = (req.user.role || "").toLowerCase();
+    const userId = req.user.id;
+
+    if (role !== "employer") {
+      return res.status(403).json({
+        success: false,
+        message: "Vetëm punëdhënësi mund të ndryshojë statusin",
+      });
     }
 
-    const updated = await applicationService.updateStatus(id, status);
+    const updated = await applicationService.updateStatus(id, status, userId);
+
     return res.json({ success: true, data: updated });
   } catch (err) {
     next(err);
