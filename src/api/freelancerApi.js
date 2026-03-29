@@ -32,6 +32,14 @@ export async function saveMyCv(payload) {
   return parseResponse(res);
 }
 
+export async function deleteMyCv() {
+  const res = await fetch(`${API_BASE}/api/cv`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  return parseResponse(res);
+}
+
 export async function fetchMyApplications() {
   const res = await fetch(`${API_BASE}/api/applications/me`, {
     headers: getAuthHeaders(),

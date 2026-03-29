@@ -35,3 +35,23 @@ exports.createOrUpdate = async (userId, data) => {
   await CV.updateByUserId(userId, payload);
   return CV.findByUserId(userId);
 };
+
+exports.deleteByUserId = async (userId) => {
+  const existing = await CV.findByUserId(userId);
+
+  if (!existing) {
+    const e = new Error("CV nuk ekziston");
+    e.statusCode = 404;
+    throw e;
+  }
+
+  const deleted = await CV.deleteByUserId(userId);
+
+  if (!deleted) {
+    const e = new Error("CV nuk u fshi");
+    e.statusCode = 400;
+    throw e;
+  }
+
+  return { message: "CV u fshi me sukses" };
+};

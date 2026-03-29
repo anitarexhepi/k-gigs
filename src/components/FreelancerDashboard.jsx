@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { fetchGigs } from "../api/gigsApi";
-import { fetchMyApplications, fetchMyCv, saveMyCv } from "../api/freelancerApi";
+import { fetchMyApplications, fetchMyCv, saveMyCv, deleteMyCv, } from "../api/freelancerApi";
 
 function StatCard({ title, value, subtitle }) {
   return (
@@ -297,6 +297,47 @@ const FreelancerDashboard = () => {
     }
   };
 
+  const handleDeleteCv = async () => {
+    const confirmed = window.confirm("A je i sigurt që don me fshi CV-në?");
+    if (!confirmed) return;
+  
+    try {
+      setSavingCv(true);
+      setError("");
+      setMessage("");
+  
+      await deleteMyCv();
+  
+      setCv(null);
+      setCvForm({
+        full_name: "",
+        bio: "",
+        skills: "",
+        experience: "",
+        education: "",
+        phone: "",
+        city: "",
+      });
+  
+      const [appRes, gigsRes] = await Promise.all([
+        fetchMyApplications(),
+        fetchGigs({ page: 1, limit: 50, status: "open" }),
+      ]);
+  
+      const appData = appRes.data || [];
+      const gigsData = gigsRes.items || [];
+  
+      setApplications(appData);
+      setRecommendedGigs(buildRecommendedGigs(gigsData, appData, null));
+      setMessage("CV u fshi me sukses.");
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Gabim gjatë fshirjes së CV-së");
+    } finally {
+      setSavingCv(false);
+    }
+  };
+
   if (!token) return <Navigate to="/login" replace />;
   if (role !== "freelancer") return <Navigate to="/" replace />;
 
@@ -454,26 +495,41 @@ const FreelancerDashboard = () => {
                 </div>
 
                 <div className="flex flex-col items-end gap-3">
-                  {message && (
-                    <div className="w-full bg-green-50 border border-green-200 text-green-700 rounded-2xl p-4 text-sm">
-                      {message}
-                    </div>
-                  )}
+  {message && (
+    <div className="w-full bg-green-50 border border-green-200 text-green-700 rounded-2xl p-4 text-sm">
+      {message}
+    </div>
+  )}
 
-                  {error && (
-                    <div className="w-full bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm">
-                      {error}
-                    </div>
-                  )}
+  {error && (
+    <div className="w-full bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm">
+      {error}
+    </div>
+  )}
 
-                  <button
-                    type="submit"
-                    disabled={savingCv}
-                    className="px-6 py-3 rounded-2xl bg-[#4f6d54] text-white font-semibold hover:bg-[#3f5944] transition disabled:opacity-70"
-                  >
-                    {savingCv ? "Duke u ruajtur..." : cv ? "Përditëso CV" : "Ruaj CV"}
-                  </button>
-                </div>
+  <div className="flex gap-3">
+    {cv && (
+      <button
+        type="button"
+        onClick={handleDeleteCv}
+        disabled={savingCv}
+        className="px-6 py-3 rounded-2xl border border-red-500 text-red-600 font-semibold hover:bg-red-50 transition disabled:opacity-70"
+      >
+        Fshije CV-në
+      </button>
+    )}
+
+    <button
+      type="submit"
+      disabled={savingCv}
+      className="px-6 py-3 rounded-2xl bg-[#4f6d54] text-white font-semibold hover:bg-[#3f5944] transition disabled:opacity-70"
+    >
+      {savingCv ? "Duke u ruajtur..." : cv ? "Përditëso CV" : "Ruaj CV"}
+    </button>
+  </div>
+</div>
+
+                
               </form>
             </section>
 

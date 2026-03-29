@@ -64,6 +64,15 @@ class CV {
 
     return this.findByUserId(user_id);
   }
+
+  static async deleteByUserId(user_id) {
+    const [result] = await pool.execute(
+      "DELETE FROM cvs WHERE user_id = ?",
+      [user_id]
+    );
+
+    return result.affectedRows > 0;
+  }
 }
 
 module.exports = CV;

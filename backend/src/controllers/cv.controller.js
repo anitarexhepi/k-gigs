@@ -30,3 +30,13 @@ exports.createOrUpdateMyCv = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.deleteMyCv = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const result = await cvService.deleteByUserId(userId);
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+};
