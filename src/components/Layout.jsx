@@ -20,7 +20,7 @@ const Layout = ({ children }) => {
   return (
     <>
       <Navbar key={refresh} />
-      <main className="pt-12 px-4 min-h-screen">{children}</main>
+      <main className="pt-20 px-4 min-h-screen">{children}</main>
       <Footer />
     </>
   );

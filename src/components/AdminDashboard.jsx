@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "./adminDashboard.css";
 
 const emptyForm = {
   first_name: "",
@@ -17,7 +16,6 @@ export default function AdminDashboard() {
   const [q, setQ] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
-
   const [form, setForm] = useState(emptyForm);
 
   const token = localStorage.getItem("token");
@@ -83,7 +81,6 @@ export default function AdminDashboard() {
         role: form.role,
       };
 
-      // password e dërgojmë vetëm nëse user ka shkru diçka
       if (form.password && form.password.trim()) {
         payload.password = form.password;
       }
@@ -114,13 +111,11 @@ export default function AdminDashboard() {
 
       if (!res.ok) {
         throw new Error(
-          json?.message ||
-            (isEditing ? "Update failed" : "Create failed")
+          json?.message || (isEditing ? "Update failed" : "Create failed")
         );
       }
 
       alert(isEditing ? "User u përditësua!" : "User u krijua!");
-
       resetForm();
       load();
     } catch (e) {
@@ -156,14 +151,17 @@ export default function AdminDashboard() {
     try {
       setErr("");
 
-      const res = await fetch(`http://localhost:5000/api/admin/users/${id}/active`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ active: !current }),
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/admin/users/${id}/active`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ active: !current }),
+        }
+      );
 
       const json = await res.json();
       if (!res.ok) throw new Error(json?.message || "Failed to update user");
@@ -194,7 +192,15 @@ export default function AdminDashboard() {
     const admins = users.filter((u) => u.role === "admin").length;
     const activeRate = total ? Math.round((active / total) * 100) : 0;
 
-    return { total, active, inactive, freelancers, punedhenes, admins, activeRate };
+    return {
+      total,
+      active,
+      inactive,
+      freelancers,
+      punedhenes,
+      admins,
+      activeRate,
+    };
   }, [users]);
 
   const filteredUsers = useMemo(() => {
@@ -219,192 +225,261 @@ export default function AdminDashboard() {
   }, [users, q]);
 
   return (
-    <div className="adm">
-      <h1 className="adm__title">Admin Dashboard</h1>
+    <div className="min-h-screen bg-[#eef6ec] pt-28 px-4 pb-12">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-gradient-to-r from-[#5f8367] to-[#8ab48c] text-white rounded-3xl shadow-lg p-8 mb-8">
+          <h1 className="text-4xl font-extrabold">Admin Dashboard</h1>
+          <p className="mt-3 text-white/90 max-w-2xl">
+            Menaxho përdoruesit, rolet dhe statusin aktiv të llogarive në një
+            vend.
+          </p>
+        </div>
 
-      {err && <p style={{ color: "red", marginBottom: 12 }}>{err}</p>}
+        {err && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4">
+            {err}
+          </div>
+        )}
 
-      {showForm && (
-        <div className="adm__form">
-          <input
-            className="adm__input"
-            placeholder="First name"
-            value={form.first_name}
-            onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-          />
-          <input
-            className="adm__input"
-            placeholder="Last name"
-            value={form.last_name}
-            onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-          />
-          <input
-            className="adm__input"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-          <input
-            className="adm__input"
-            placeholder={
-              editingUserId !== null
-                ? "Password (leave empty if no change)"
-                : "Password"
-            }
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-          <input
-            className="adm__input"
-            placeholder="Phone"
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          />
-          <input
-            className="adm__input"
-            placeholder="City"
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
-          />
-          <select
-            className="adm__input"
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
+        {showForm && (
+          <div className="bg-white rounded-3xl shadow-md p-6 mb-8 border border-green-100">
+            <h2 className="text-2xl font-bold text-[#36563c] mb-5">
+              {editingUserId !== null ? "Përditëso User" : "Krijo User të Ri"}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <input
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
+                placeholder="First name"
+                value={form.first_name}
+                onChange={(e) =>
+                  setForm({ ...form, first_name: e.target.value })
+                }
+              />
+
+              <input
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
+                placeholder="Last name"
+                value={form.last_name}
+                onChange={(e) =>
+                  setForm({ ...form, last_name: e.target.value })
+                }
+              />
+
+              <input
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
+                placeholder="Email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+
+              <input
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
+                placeholder={
+                  editingUserId !== null
+                    ? "Password (leave empty if no change)"
+                    : "Password"
+                }
+                type="password"
+                value={form.password}
+                onChange={(e) =>
+                  setForm({ ...form, password: e.target.value })
+                }
+              />
+
+              <input
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
+                placeholder="Phone"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+
+              <input
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
+                placeholder="City"
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+              />
+
+              <select
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300 bg-white"
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+              >
+                <option value="freelancer">Freelancer</option>
+                <option value="punedhenes">Punëdhënës</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div className="flex flex-wrap gap-3 mt-5">
+              <button
+                className="px-5 py-3 rounded-2xl bg-[#4f6d54] text-white font-semibold hover:bg-[#3f5944] transition"
+                onClick={handleSubmit}
+              >
+                {editingUserId !== null ? "Update User" : "Create User"}
+              </button>
+
+              <button
+                className="px-5 py-3 rounded-2xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition"
+                onClick={resetForm}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 mb-8">
+          <button
+            className="px-5 py-3 rounded-2xl bg-[#4f6d54] text-white font-semibold hover:bg-[#3f5944] transition w-full sm:w-auto"
+            onClick={openCreateForm}
           >
-            <option value="freelancer">Freelancer</option>
-            <option value="punedhenes">Punëdhënës</option>
-            <option value="admin">Admin</option>
-          </select>
+            {showForm && editingUserId === null ? "Creating..." : "Add User"}
+          </button>
 
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button className="btn btn--primary" onClick={handleSubmit}>
-              {editingUserId !== null ? "Update User" : "Create User"}
-            </button>
+          <div className="text-sm text-gray-600">
+            Activation rate{" "}
+            <span className="font-bold text-[#36563c]">{stats.activeRate}%</span>
+            {" • "}
+            Admins{" "}
+            <span className="font-bold text-[#36563c]">{stats.admins}</span>
+          </div>
 
-            <button className="btn" onClick={resetForm}>
-              Cancel
-            </button>
+          <div className="lg:ml-auto w-full lg:w-auto">
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search by name / email / role..."
+              className="w-full lg:w-80 border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-300"
+            />
           </div>
         </div>
-      )}
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
-        <button className="btn btn--primary" onClick={openCreateForm}>
-          {showForm && editingUserId === null ? "Creating..." : "Add User"}
-        </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-5 mb-8">
+          <div className="bg-white rounded-3xl shadow-md p-5">
+            <p className="text-sm text-gray-500">Users</p>
+            <h3 className="text-3xl font-extrabold text-[#36563c] mt-2">
+              {stats.total}
+            </h3>
+          </div>
 
-        <div style={{ fontSize: 13, color: "#667085" }}>
-          Activation rate: <b style={{ color: "#101828" }}>{stats.activeRate}%</b> • Admins:{" "}
-          <b style={{ color: "#101828" }}>{stats.admins}</b>
+          <div className="bg-white rounded-3xl shadow-md p-5">
+            <p className="text-sm text-gray-500">Active Users</p>
+            <h3 className="text-3xl font-extrabold text-[#36563c] mt-2">
+              {stats.active}
+            </h3>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-md p-5">
+            <p className="text-sm text-gray-500">Inactive Users</p>
+            <h3 className="text-3xl font-extrabold text-[#36563c] mt-2">
+              {stats.inactive}
+            </h3>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-md p-5">
+            <p className="text-sm text-gray-500">Freelancers</p>
+            <h3 className="text-3xl font-extrabold text-[#36563c] mt-2">
+              {stats.freelancers}
+            </h3>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-md p-5">
+            <p className="text-sm text-gray-500">Punëdhënës</p>
+            <h3 className="text-3xl font-extrabold text-[#36563c] mt-2">
+              {stats.punedhenes}
+            </h3>
+          </div>
         </div>
 
-        <div style={{ marginLeft: "auto" }}>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search by name / email / role..."
-            className="adm__search"
-          />
-        </div>
-      </div>
-
-      <div className="adm__stats">
-        <div className="stat">
-          <div className="stat__label">Users</div>
-          <div className="stat__value">{stats.total}</div>
-        </div>
-
-        <div className="stat">
-          <div className="stat__label">Active Users</div>
-          <div className="stat__value">{stats.active}</div>
-        </div>
-
-        <div className="stat">
-          <div className="stat__label">Inactive Users</div>
-          <div className="stat__value">{stats.inactive}</div>
-        </div>
-
-        <div className="stat">
-          <div className="stat__label">Freelancers</div>
-          <div className="stat__value">{stats.freelancers}</div>
-        </div>
-
-        <div className="stat">
-          <div className="stat__label">Punëdhënës</div>
-          <div className="stat__value">{stats.punedhenes}</div>
-        </div>
-      </div>
-
-      <div style={{ overflowX: "auto" }}>
-        <table className="tbl">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>City</th>
-              <th>Role</th>
-              <th>Active</th>
-              <th style={{ textAlign: "right" }}>Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredUsers.map((u) => {
-              const isActive = Number(u.is_active) === 1;
-
-              return (
-                <tr key={u.id}>
-                  <td>{u.id}</td>
-                  <td>{u.first_name} {u.last_name}</td>
-                  <td>{u.email}</td>
-                  <td>{u.phone || "-"}</td>
-                  <td>{u.city || "-"}</td>
-                  <td>{u.role}</td>
-                  <td>
-                    <span className={`badge ${isActive ? "badge--yes" : "badge--no"}`}>
-                      {isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: "right" }}>
-                    <button
-                      className="btn"
-                      onClick={() => openEditForm(u)}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      className={`btn ${isActive ? "" : "btn--primary"}`}
-                      style={{ marginLeft: 8 }}
-                      onClick={() => toggleActive(u.id, isActive)}
-                    >
-                      {isActive ? "Deactivate" : "Activate"}
-                    </button>
-
-                    <button
-                      className="btn btn--danger"
-                      style={{ marginLeft: 8 }}
-                      onClick={() => deleteUser(u.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
+        <div className="bg-white rounded-3xl shadow-md overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-green-100/70 text-[#36563c]">
+                <tr>
+                  <th className="px-4 py-4 text-left font-semibold">ID</th>
+                  <th className="px-4 py-4 text-left font-semibold">Name</th>
+                  <th className="px-4 py-4 text-left font-semibold">Email</th>
+                  <th className="px-4 py-4 text-left font-semibold">Phone</th>
+                  <th className="px-4 py-4 text-left font-semibold">City</th>
+                  <th className="px-4 py-4 text-left font-semibold">Role</th>
+                  <th className="px-4 py-4 text-left font-semibold">Active</th>
+                  <th className="px-4 py-4 text-right font-semibold">Action</th>
                 </tr>
-              );
-            })}
+              </thead>
 
-            {filteredUsers.length === 0 && (
-              <tr>
-                <td colSpan="8" style={{ padding: 12 }}>
-                  No users found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              <tbody>
+                {filteredUsers.map((u) => {
+                  const isActive = Number(u.is_active) === 1;
+
+                  return (
+                    <tr key={u.id} className="border-t hover:bg-green-50/50">
+                      <td className="px-4 py-4">{u.id}</td>
+                      <td className="px-4 py-4">
+                        {u.first_name} {u.last_name}
+                      </td>
+                      <td className="px-4 py-4">{u.email}</td>
+                      <td className="px-4 py-4">{u.phone || "-"}</td>
+                      <td className="px-4 py-4">{u.city || "-"}</td>
+                      <td className="px-4 py-4 capitalize">{u.role}</td>
+                      <td className="px-4 py-4">
+                        <span
+                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                            isActive
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <button
+                            className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition"
+                            onClick={() => openEditForm(u)}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            className={`px-4 py-2 rounded-xl font-semibold transition ${
+                              isActive
+                                ? "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                : "bg-[#4f6d54] text-white hover:bg-[#3f5944]"
+                            }`}
+                            onClick={() => toggleActive(u.id, isActive)}
+                          >
+                            {isActive ? "Deactivate" : "Activate"}
+                          </button>
+
+                          <button
+                            className="px-4 py-2 rounded-xl border border-red-300 text-red-600 font-semibold hover:bg-red-50 transition"
+                            onClick={() => deleteUser(u.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {filteredUsers.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="8"
+                      className="px-4 py-8 text-center text-gray-500"
+                    >
+                      No users found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );
