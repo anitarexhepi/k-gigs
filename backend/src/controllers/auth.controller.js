@@ -1,10 +1,6 @@
-const AuthService = require('../services/auth.service');
-const jwt = require("jsonwebtoken");
-
-const JWT_SECRET = process.env.JWT_SECRET || "YOUR_SECRET_KEY";
+const AuthService = require("../services/auth.service");
 
 class AuthController {
-
   static async signup(req, res) {
     try {
       const user = await AuthService.signup(req.body);
@@ -24,7 +20,6 @@ class AuthController {
         refreshToken,
         user,
       });
-
     } catch (err) {
       res.status(401).json({ success: false, message: err.message });
     }
@@ -34,36 +29,26 @@ class AuthController {
     try {
       const { refreshToken } = req.body;
 
-      if (!refreshToken) {
-        return res.status(400).json({
-          success: false,
-          message: "Refresh token mungon",
-        });
-      }
-
-      const decoded = jwt.verify(refreshToken, JWT_SECRET);
-
-      const newAccessToken = jwt.sign(
-        { id: decoded.id, role: decoded.role },
-        JWT_SECRET,
-        { expiresIn: "1h" }
-      );
+      const result = await AuthService.refresh(refreshToken);
 
       res.status(200).json({
         success: true,
-        token: newAccessToken,
+        token: result.token,
+        refreshToken: result.refreshToken,
       });
-
     } catch (err) {
       res.status(401).json({
         success: false,
-        message: "Refresh token invalid ose i skaduar",
+        message: err.message,
       });
     }
   }
 
   static async logout(req, res) {
     try {
+      const { refreshToken, userId } = req.body;
+      await AuthService.logout(userId, refreshToken);
+
       res.status(200).json({
         success: true,
         message: "Logout successful",
@@ -78,5 +63,3 @@ class AuthController {
 }
 
 module.exports = AuthController;
-
-

@@ -35,6 +35,18 @@ class User {
     return rows[0];
   }
 
+  static async findByRefreshToken(refreshToken) {
+    const sql = `SELECT * FROM users WHERE refresh_token = ?`;
+    const [rows] = await pool.execute(sql, [refreshToken]);
+    return rows[0];
+  }
+
+  static async updateRefreshToken(id, refreshToken) {
+    const sql = `UPDATE users SET refresh_token = ? WHERE id = ?`;
+    const [result] = await pool.execute(sql, [refreshToken, id]);
+    return result;
+  }
+
   static async update(id, data) {
     if (!data || Object.keys(data).length === 0) {
       return { affectedRows: 0 };

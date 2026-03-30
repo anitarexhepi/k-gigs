@@ -3,8 +3,17 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET || "YOUR_SECRET_KEY";
+const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "YOUR_REFRESH_SECRET";
 
 class AuthService {
+  static generateAccessToken(payload) {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+  }
+
+  static generateRefreshToken(payload) {
+    return jwt.sign(payload, REFRESH_SECRET, { expiresIn: "7d" });
+  }
+
   static async signup({ first_name, last_name, email, password, phone, city, role }) {
     email = (email || "").trim().toLowerCase();
     role = (role || "").trim().toLowerCase();
@@ -60,20 +69,12 @@ class AuthService {
     }
 
     if (email === "admin@kgigs.com" && password === "admin1234") {
-      const accessToken = jwt.sign(
-        { id: 0, role: "admin" },
-        JWT_SECRET,
-        { expiresIn: "1h" }
-      );
-
-      const refreshToken = jwt.sign(
-        { id: 0, role: "admin" },
-        JWT_SECRET,
-        { expiresIn: "7d" }
-      );
+      const payload = { id: 0, role: "admin" };
+      const token = this.generateAccessToken(payload);
+      const refreshToken = this.generateRefreshToken(payload);
 
       return {
-        token: accessToken,
+        token,
         refreshToken,
         user: {
           id: 0,
@@ -98,20 +99,14 @@ class AuthService {
       throw new Error("Role i pavlefshem");
     }
 
-    const accessToken = jwt.sign(
-      { id: user.id, role },
-      JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const payload = { id: user.id, role };
+    const token = this.generateAccessToken(payload);
+    const refreshToken = this.generateRefreshToken(payload);
 
-    const refreshToken = jwt.sign(
-      { id: user.id, role },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    await User.updateRefreshToken(user.id, refreshToken);
 
     return {
-      token: accessToken,
+      token,
       refreshToken,
       user: {
         id: user.id,
@@ -119,6 +114,64 @@ class AuthService {
         role,
       },
     };
+  }
+
+  static async refresh(refreshToken) {
+    if (!refreshToken) {
+      throw new Error("Refresh token mungon");
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, REFRESH_SECRET);
+    } catch (err) {
+      throw new Error("Refresh token invalid ose i skaduar");
+    }
+
+    if (decoded.id === 0 && decoded.role === "admin") {
+      const token = this.generateAccessToken({ id: 0, role: "admin" });
+      const newRefreshToken = this.generateRefreshToken({ id: 0, role: "admin" });
+
+      return {
+        token,
+        refreshToken: newRefreshToken,
+      };
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user) throw new Error("User not found");
+
+    if (user.refresh_token !== refreshToken) {
+      throw new Error("Refresh token nuk perputhet");
+    }
+
+    const payload = { id: user.id, role: user.role };
+    const token = this.generateAccessToken(payload);
+    const newRefreshToken = this.generateRefreshToken(payload);
+
+    await User.updateRefreshToken(user.id, newRefreshToken);
+
+    return {
+      token,
+      refreshToken: newRefreshToken,
+    };
+  }
+
+  static async logout(userId, refreshToken) {
+    if (!refreshToken) return true;
+
+    let decoded = null;
+    try {
+      decoded = jwt.verify(refreshToken, REFRESH_SECRET);
+    } catch (err) {
+      return true;
+    }
+
+    if (decoded.id === 0) return true;
+
+    const idToClear = userId || decoded.id;
+    await User.updateRefreshToken(idToClear, null);
+    return true;
   }
 }
 

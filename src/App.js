@@ -1,6 +1,7 @@
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
+import { refreshAccessToken } from "./utils/authUtils";
 
 const AboutUs = React.lazy(() => import("./components/AboutUs"));
 const HomePage = React.lazy(() => import("./components/HomePage"));
@@ -19,13 +20,29 @@ const GigsPage = React.lazy(() => import("./components/GigsPage"));
 const GigDetails = React.lazy(() => import("./components/GigDetails"));
 
 function App() {
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (!token && refreshToken) {
+        await refreshAccessToken();
+        window.dispatchEvent(new Event("authChanged"));
+      }
+    };
+
+    checkAuth();
+  }, []);
+
   return (
     <Router>
       <Layout>
         <Suspense
           fallback={
-            <div style={{ textAlign: "center", marginTop: "50px" }}>
-              Loading...
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="text-green-700 font-semibold text-lg animate-pulse">
+                Duke u ngarkuar...
+              </div>
             </div>
           }
         >

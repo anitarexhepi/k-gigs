@@ -18,11 +18,31 @@ const Navbar = () => {
 
   const firstName = user?.first_name || "User";
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken");
+      const userId = localStorage.getItem("userId");
+
+      if (refreshToken) {
+        await fetch("http://localhost:5000/api/auth/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refreshToken, userId }),
+        });
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
     localStorage.removeItem("userId");
+
+    window.dispatchEvent(new Event("authChanged"));
     navigate("/login");
     window.location.reload();
   };

@@ -30,11 +30,12 @@ const Login = () => {
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setError(data.message || "Kyçja dështoi");
+        setError(data.message || "Kycja deshtoi");
         return;
       }
 
       localStorage.setItem("token", data.token);
+      localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("userId", data.user.id);
@@ -57,7 +58,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Diçka shkoi gabim gjatë kyçjes.");
+      setError("Dicka shkoi gabim gjate kycjes.");
     }
   };
 
@@ -69,7 +70,7 @@ const Login = () => {
             className="text-4xl font-bold mb-8"
             style={{ color: "rgb(100, 146, 104)" }}
           >
-            Kyçje në K-Gigs
+            Kycje ne K-Gigs
           </h2>
 
           <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
@@ -84,7 +85,7 @@ const Login = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Shkruaj emailin tënd"
+                  placeholder="Shkruaj emailin tend"
                   className="w-full bg-transparent outline-none text-sm"
                   required
                   autoComplete="off"
@@ -94,7 +95,7 @@ const Login = () => {
 
             <div>
               <label className="block text-sm font-semibold mb-2">
-                Fjalëkalimi
+                Fjalekalimi
               </label>
               <motion.div
                 whileHover={{ scale: 1.02, boxShadow: "0 0 0 2px #6fd09e33" }}
@@ -105,7 +106,7 @@ const Login = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Shkruaj fjalëkalimin"
+                  placeholder="Shkruaj fjalekalimin"
                   className="w-full bg-transparent outline-none text-sm"
                   required
                   autoComplete="new-password"
@@ -127,7 +128,7 @@ const Login = () => {
                   "linear-gradient(to right,rgb(99, 148, 113),rgb(106, 192, 135))",
               }}
             >
-              Kyçu
+              Kycu
             </motion.button>
           </form>
 
@@ -156,10 +157,10 @@ const Login = () => {
             className="text-center px-8"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-snug">
-              Filloni rrugëtimin tuaj në K-Gigs!
+              Filloni rrgetimin tuaj ne K-Gigs!
             </h2>
             <p className="mt-4 text-white text-sm">
-              Lidhuni me punëdhënësit apo ofruesit e shërbimeve që ju përshtaten.
+              Lidhuni me punedhenesit apo ofruesit e sherbimeve qe ju pershtaten.
             </p>
           </motion.div>
         </div>
