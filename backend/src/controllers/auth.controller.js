@@ -10,56 +10,73 @@ class AuthController {
     }
   }
 
-  static async login(req, res) {
-    try {
-      const { token, refreshToken, user } = await AuthService.login(req.body);
+ static async login(req, res) {
+  try {
+    const { token, refreshToken, user } = await AuthService.login(req.body);
 
-      res.status(200).json({
-        success: true,
-        token,
-        refreshToken,
-        user,
-      });
-    } catch (err) {
-      res.status(401).json({ success: false, message: err.message });
-    }
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, // true në production
+      sameSite: "lax",
+      path: "/api/auth/refresh",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      token,
+      user,
+    });
+  } catch (err) {
+    res.status(401).json({ success: false, message: err.message });
   }
+}
+ static async refresh(req, res) {
+  try {
+    const refreshToken = req.cookies.refreshToken;
 
-  static async refresh(req, res) {
-    try {
-      const { refreshToken } = req.body;
+    const result = await AuthService.refresh(refreshToken);
 
-      const result = await AuthService.refresh(refreshToken);
+    res.cookie("refreshToken", result.refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      path: "/api/auth/refresh",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-      res.status(200).json({
-        success: true,
-        token: result.token,
-        refreshToken: result.refreshToken,
-      });
-    } catch (err) {
-      res.status(401).json({
-        success: false,
-        message: err.message,
-      });
-    }
+    res.status(200).json({
+      success: true,
+      token: result.token,
+    });
+  } catch (err) {
+    res.status(401).json({
+      success: false,
+      message: err.message,
+    });
   }
-
+}
   static async logout(req, res) {
-    try {
-      const { refreshToken, userId } = req.body;
-      await AuthService.logout(userId, refreshToken);
+  try {
+    const refreshToken = req.cookies.refreshToken;
 
-      res.status(200).json({
-        success: true,
-        message: "Logout successful",
-      });
-    } catch (err) {
-      res.status(500).json({
-        success: false,
-        message: "Logout failed",
-      });
-    }
+    await AuthService.logout(null, refreshToken);
+
+    res.clearCookie("refreshToken", {
+      path: "/api/auth/refresh",
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Logout failed",
+    });
   }
+}
 }
 
 module.exports = AuthController;

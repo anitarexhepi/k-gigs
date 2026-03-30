@@ -141,7 +141,7 @@ class AuthService {
     const user = await User.findById(decoded.id);
     if (!user) throw new Error("User not found");
 
-    if (user.refresh_token !== refreshToken) {
+    if (!user.refresh_token || user.refresh_token !== refreshToken) {
       throw new Error("Refresh token nuk perputhet");
     }
 

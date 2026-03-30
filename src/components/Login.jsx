@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock } from "lucide-react";
 import { motion } from "framer-motion";
+import api from "../api/api"; // 🔥 IMPORT I RI
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,24 +22,24 @@ const Login = () => {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const res = await api.post("/auth/login", {
+        email,
+        password,
       });
 
-      const data = await res.json();
+      const data = res.data;
 
-      if (!res.ok || !data.success) {
+      if (!data.success) {
         setError(data.message || "Kycja deshtoi");
         return;
       }
 
+   
       localStorage.setItem("token", data.token);
-      localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("role", data.user.role);
       localStorage.setItem("userId", data.user.id);
+
       window.dispatchEvent(new Event("authChanged"));
 
       resetForm();
@@ -65,6 +66,8 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="w-full max-w-5xl bg-white shadow-lg rounded-2xl overflow-hidden grid md:grid-cols-2">
+        
+        {/* LEFT SIDE */}
         <div className="p-10 bg-[#f9f9f9]">
           <h2
             className="text-4xl font-bold mb-8"
@@ -74,6 +77,8 @@ const Login = () => {
           </h2>
 
           <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
+            
+            {/* EMAIL */}
             <div>
               <label className="block text-sm font-semibold mb-2">Emaili</label>
               <motion.div
@@ -93,6 +98,7 @@ const Login = () => {
               </motion.div>
             </div>
 
+            {/* PASSWORD */}
             <div>
               <label className="block text-sm font-semibold mb-2">
                 Fjalekalimi
@@ -114,10 +120,12 @@ const Login = () => {
               </motion.div>
             </div>
 
+            {/* ERROR */}
             {error && (
               <p className="text-red-500 text-sm text-center">{error}</p>
             )}
 
+            {/* BUTTON */}
             <motion.button
               type="submit"
               whileHover={{ scale: 1.03 }}
@@ -143,6 +151,7 @@ const Login = () => {
           </p>
         </div>
 
+        {/* RIGHT SIDE */}
         <div
           className="hidden md:flex items-center justify-center"
           style={{
@@ -157,7 +166,7 @@ const Login = () => {
             className="text-center px-8"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white leading-snug">
-              Filloni rrgetimin tuaj ne K-Gigs!
+              Filloni rrugetimin tuaj ne K-Gigs!
             </h2>
             <p className="mt-4 text-white text-sm">
               Lidhuni me punedhenesit apo ofruesit e sherbimeve qe ju pershtaten.
